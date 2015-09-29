@@ -11,12 +11,16 @@ app.config.from_pyfile('flaskapp.cfg')
 def index():
     return render_template('index.html')
 
-@app.route('/test')
+@app.route('/register')
 def test():
-    return jsonify(success="Congrats you are ready to rock!"),200
+    data=request.get_json(force=True)
+    if "Gaurav"==data['user']:
+        return josnify(error="User already exits"),500
+    else:
+        return jsonify(success="user created"),200
 
 
-@app.route('/fail')
+@app.route('/event/create')
 def fail():
     return jsonify(error="You can read the error"),500
 
