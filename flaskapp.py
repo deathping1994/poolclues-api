@@ -17,6 +17,18 @@ db = SQLAlchemy(app)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+def start_session(email_id,authtoken):
+    try:
+        res=mongo.db.session.insert({"user":email_id,"authtoken":authtoken})
+        return True
+    except Exception:
+        return False
+def stop_session(email_id,authtoken):
+    try:
+        mongo.db.session.remove({"user":email_id,"authtoken":authtoken})
+        return True
+    except Exception:
+        return False
 
 def log(e):
     try:
@@ -62,8 +74,11 @@ def auth():
             password= data['password'].encode()
             if user is not None:
                 if bcrypt.check_password_hash(user._password.encode('utf-8'),password):
-                    return jsonify(success="Successfully Logged in !",
-                                   authkey=bcrypt.generate_password_hash(user.email_id+str(datetime.datetime.now())))
+                    authtoken=bcrypt.generate_password_hash(user.email_id+str(datetime.datetime.now()))
+                    if start_session(user.email_id,authtoken):
+                        return jsonify(success="Successfully Logged in !",authtoken=authtoken)
+                    else:
+                        raise Exception
                 else:
                     return jsonify(error="Incorrect username and password"),403
             else:
@@ -77,6 +92,22 @@ def auth():
             print e
             log(e)
             return jsonify(error="Something Went wrong the event has been recorded and will soon be fixed."),500
+
+
+@app.route('/logout/<email_id>',methods=["GET","POST"])
+def logout(email_id):
+    data=request.get_json(force=True)
+    try:
+        if "authtoken" in data:
+            if stop_session(email_id,data['authtoken']):
+                return jsonify(success="Successfully logged off"),200
+            else:
+                return jsonify(error="Could not log you off. Try again"),500
+        else:
+            return jsonify(error="Authtoken missing in payload."),500
+    except Exception as e:
+        log(e)
+        return jsonify(error="Something went wrong. You might not be logged off so check it before leaving."),500
 
 
 @app.route('/')
