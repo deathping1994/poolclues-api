@@ -3,9 +3,10 @@ import datetime
 event_id_sequence="101"
 __author__ = 'gaurav'
 
+
 class User(db.Model):
     email_id= db.Column(db.String(80), unique=True,primary_key=True,nullable=False)
-    _password= db.Column(db.String(20),nullable=False)
+    _password= db.Column(db.String(100),nullable=False)
     first_name=db.Column(db.String(20),nullable=False)
     middle_name= db.Column(db.String(20),nullable=True)
     last_name = db.Column(db.String(20),nullable=True)
@@ -14,6 +15,7 @@ class User(db.Model):
     city= db.Column(db.String(20),nullable=True)
     state=db.Column(db.String(20),nullable=True)
     country=db.Column(db.String(20),nullable=False)
+    verified=db.Column(db.Boolean,default=False,nullable=False)
 
     def __init__(self, first_name,middle_name,last_name,email_id,_password,house_number,street,city,state,country):
         self.first_name = first_name
@@ -26,9 +28,7 @@ class User(db.Model):
         self.city=city
         self.state=state
         self.country=country
-
-    def __repr__(self):
-        return '<User %r>' % self.username
+        self.verified=False
 
 
 class ContactNumber(db.Model):
