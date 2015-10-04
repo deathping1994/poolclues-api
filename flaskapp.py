@@ -21,6 +21,7 @@ class User(db.Model):
     city= db.Column(db.String(20),nullable=True)
     state=db.Column(db.String(20),nullable=True)
     country=db.Column(db.String(20),nullable=False)
+    verified=db.Column(db.Boolean,default=False,nullable=False)
 
     def __init__(self, first_name,middle_name,last_name,email_id,_password,house_number,street,city,state,country):
         self.first_name = first_name
@@ -33,6 +34,7 @@ class User(db.Model):
         self.city=city
         self.state=state
         self.country=country
+        self.verified=False
 
 
 @app.route('/register',methods=["GET","POST"])
@@ -41,17 +43,18 @@ def index():
     data=request.get_json(force=True)
     print(data)
     db.create_all()
-    admin = User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
-                 bcrypt.generate_password_hash(data['password']),"559 ka/48 kha","Singar Nagar","Lucknow","Uttar Pradesh","India")
+    user = User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
+                 bcrypt.generate_password_hash(data['password']),data['house_no'],data['street'],
+                 data['city'],data['state'],data['country'])
     # guest = User('guest', 'guest@example.com')
     try:
-        db.session.add(admin)
+        db.session.add(user)
         # db.session.add(guest)
         db.session.commit()
-        return jsonify(success="Records inserted"),200
+        return jsonify(success="User successfully registered"),200
     except Exception as e:
         print e
-        return jsonify(error="Duplicate values"),500
+        return jsonify(error="Oops something went wrong. Contact administrator"),500
 
 
 @app.route('/')
@@ -59,5 +62,4 @@ def test():
     return jsonify(success="It works")
 
 if __name__ == '__main__':
-
-    app.run(0.0.0.0:8080)
+    app.run(host="0.0.0.0",port=8080,debug=True)
