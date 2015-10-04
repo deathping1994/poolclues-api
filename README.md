@@ -58,7 +58,7 @@ example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
        }
 
 
-###endpoint: /logout/<email_id>
+###endpoint: /logout/email_id
 example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
 
 #### payload: 
