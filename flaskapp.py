@@ -40,6 +40,7 @@ def log(e):
 
 
 @app.route('/register',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def index():
     print "inside index"
     data=request.get_json(force=True)
@@ -95,6 +96,7 @@ def auth():
 
 
 @app.route('/logout/<email_id>',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def logout(email_id):
     data=request.get_json(force=True)
     try:
@@ -111,6 +113,7 @@ def logout(email_id):
 
 
 @app.route('/')
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def test():
     return jsonify(success="It works")
 
