@@ -1,7 +1,10 @@
-from flaskapp import db
+from app import db,app
 import datetime
-event_id_sequence="101"
-__author__ = 'gaurav'
+from flask.ext.sqlalchemy import SQLAlchemy
+
+
+db = SQLAlchemy(app)
+event_id_sequence= db.Sequence('event_id_seq', start=101,increment=1)
 
 
 class User(db.Model):
@@ -43,32 +46,34 @@ class ContactNumber(db.Model):
         return '<ContactNumber %r %s>' % self.email_id, self.contact_no
 
 
+# class Creator(db.Model):
+#     email_id=db.Column(db.String(80),db.ForeignKey(User.email_id),primary_key=True)
+#     event_id=db.Column(db.Integer,event_id_sequence,autoincrement=True,primary_key=True)
+#
+#     def __init__(self,email_id):
+#         self.email_id=email_id
+#
+#     def __repr__(self):
+#         return '<Creator %r %r>' % self.email_id,self.event_id
+
+
 class Event(db.Model):
-    event_id= db.Column(db.Integer,db.Sequence(event_id_sequence),primary_key=True)
+    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id))
+    event_id= db.Column(db.Integer,event_id_sequence,autoincrement=True,primary_key=True)
     event_name=db.Column(db.String(80),nullable=False)
-    target_date=db.Column(db.DateTime,nullable=False)
+    target_date=db.Column(db.Date,nullable=False)
     target_amount=db.Column(db.Float,nullable=False)
     description=db.Column(db.Text,nullable=False)
-    date_created=db.Column(db.DateTime,default=datetime.datetime.now)
+    date_created=db.Column(db.Date,nullable=False)
 
-    def __init__(self,event_name,date_created,target_date,target_amount,description):
+    def __init__(self,email_id,event_name,target_date,target_amount,description):
+        self.email_id=email_id
         self.event_name=event_name
-        self.date_created=date_created
         self.target_date=target_date
+        self.date_created=datetime.datetime.now().date()
         self.target_amount=target_amount
         self.description=description
 
 
-    def __repr__(self):
-        return '<Event %r %s>' % self.event_id_id, self.event_name
+__author__ = 'gaurav'
 
-
-class Creator(db.Model):
-    email_id= db.Column(db.String(80),db.ForeignKey(User.email_id),primary_key=True)
-    event_id= db.Column(db.Integer,db.Sequence(event_id_sequence),db.ForeignKey(Event.event_id),primary_key=True)
-
-    def __init__(self,email_id):
-        self.email_id = email_id
-
-    def __repr__(self):
-        return '<Creator %r %s>' % self.email_id, self.event_id
