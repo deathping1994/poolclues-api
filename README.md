@@ -27,7 +27,8 @@ so url will be `http://188.166.249.229:8080/register`
        "street":"Singar Nagar",
        "city":"Lucknow",
        "state":"Uttar Pradesh",
-       "country":"India"
+       "country":"India",
+       "phone":"8375847862"     //optional
        }
 
 ###Response:  
@@ -74,4 +75,19 @@ example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
        }
 NOTE: As of now this endpoint return successfully logged off even when you are not logged in , this is a bug but wont be fixed keeping in mind that this system would be replaced with three legged auth system using redis,and JWT
 
+
+###endpoint: /<email_id>/addphone/<phone>
+example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
+
+#### payload: 
+       {"authtoken":<user's suth token>
+       }
+### Response:
+       {
+       "success":"Contact added Successfully!"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
      
