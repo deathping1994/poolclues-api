@@ -91,3 +91,41 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
        "error":"Some error message"
        }
      
+###endpoint: /event/<event_id>
+example: http://188.166.249.229:8080/event/115
+
+### Response:
+       {
+           "event_description": "Too lazy for that",
+           "event_id": 115,
+           "event_name": "Gaurav's b'day",
+           "target_amount": 5000,
+           "target_date": "2015-12-11"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+###endpoint: /event/create
+example: http://188.166.249.229:8080/event/115
+
+### Payload:
+       {
+        "authtoken":<user's suth token>
+        "email_id":"deathping1994@gmail.com",
+        "event_name": "Gaurav's b'day",
+        "target_date": "11/12/2015",
+        "target_amount":"5000",
+        "description":"Too lazy for that"
+       }
+
+### Response:
+       {
+           "event_id": 115,
+           "success": "event created successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+     
