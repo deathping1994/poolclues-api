@@ -65,14 +65,16 @@ class Event(db.Model):
     target_amount=db.Column(db.Float,nullable=False)
     description=db.Column(db.Text,nullable=False)
     date_created=db.Column(db.Date,nullable=False)
+    public=db.Column(db.Boolean,default=True)
 
-    def __init__(self,email_id,event_name,target_date,target_amount,description):
+    def __init__(self,email_id,event_name,target_date,target_amount,description,public=True):
         self.email_id=email_id
         self.event_name=event_name
         self.target_date=target_date
         self.date_created=datetime.datetime.now().date()
         self.target_amount=target_amount
         self.description=description
+        self.public=public
 
 
 __author__ = 'gaurav'

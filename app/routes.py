@@ -110,6 +110,36 @@ def display_event(event_id):
             return jsonify(error="Something went wrong!"),500
 
 
+@app.route('/<email_id>/event/list',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def user_event(email_id):
+    try:
+        events= Event.query.filter_by(email_id=email_id).all()
+        eventlist=[]
+        res={}
+        if events is not None:
+            for event in events:
+                res['event_id']=event.event_id
+                res['event_name']=event.event_name
+                res['target_date']=str(event.target_date)
+                res['date_created']=str(event.date_created)
+                res['target_amount']=event.target_amount
+                res['event_description']=event.description
+                res['public']=event.public
+                eventlist.append(res)
+            return jsonify(event_list=eventlist),200
+        else:
+            return jsonify(error="No events found"),500
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            return jsonify(error="Event Does not exist or some other sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
+
+
+
 @app.route('/event/create',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def create_event():
@@ -129,10 +159,10 @@ def create_event():
         else:
             return jsonify(error="Event name field empty"),500
     except Exception as e:
-        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
             db.session.rollback()
             print e
-            return jsonify(error="Event already Exists or some other field requirement not satisfied"),500
+            return jsonify(error="Event already Exists or User does not exists"),500
         else:
             print e
             log(e)
