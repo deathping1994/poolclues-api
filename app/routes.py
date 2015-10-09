@@ -4,7 +4,28 @@ from flask import request,jsonify
 from models import *
 from utilities import *
 import sqlalchemy.exc
+import requests
 
+
+def sendmail(to,fromemail,message):
+    try:
+        data={'to':to,'fromemail':fromemail,'message':message}
+        print requests.post("http://188.166.249.229/mailer.php",data=data).content
+        return True
+    except Exception as e:
+        print "inside exception"
+        print e
+        log(e)
+        return False
+
+
+def sendinvite(to,fromemail,eventname,msg):
+    message="Hi, "+fromemail+" has invited you to pool for "+eventname+ " on poolclues." +"\n"+msg
+    print message
+    if not sendmail(to,fromemail,message):
+        return False
+    else:
+        return True
 
 @app.route("/<email_id>/addphone/<phone>",methods=["POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
@@ -119,6 +140,7 @@ def user_event(email_id):
         res={}
         if events is not None:
             for event in events:
+                print event.event_id
                 res['event_id']=event.event_id
                 res['event_name']=event.event_name
                 res['target_date']=str(event.target_date)
@@ -126,7 +148,8 @@ def user_event(email_id):
                 res['target_amount']=event.target_amount
                 res['event_description']=event.description
                 res['public']=event.public
-                eventlist.append(res)
+                eventlist.append(res.copy())
+                print eventlist
             return jsonify(event_list=eventlist),200
         else:
             return jsonify(error="No events found"),500
@@ -137,7 +160,6 @@ def user_event(email_id):
             log(e)
             print e
             return jsonify(error="Something went wrong!"),500
-
 
 
 @app.route('/event/create',methods=["POST","GET"])
@@ -155,7 +177,23 @@ def create_event():
             db.session.add(event)
             db.session.commit()
             event_id=event.event_id
-            return jsonify(success="Event created successfully.",event_id=event_id),201
+            inviteSent=True
+            failedlist=[]
+            if "invites" in data:
+                print "found invites"
+                for invite in data['invites']:
+                    print invite['email_id']
+                    inviteentry=Invitee(invite['email_id'],event.event_id)
+                    if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
+                        inviteSent=False
+                        failedlist.append(invite['email_id'])
+                        print "inside  invite"
+                        print inviteentry.email_id
+                    else:
+                        db.session.add(inviteentry)
+                        db.session.commit()
+            return jsonify(success="Event created successfully.",event_id=event_id,
+                           failedlist=failedlist,inviteSent=inviteSent),201
         else:
             return jsonify(error="Event name field empty"),500
     except Exception as e:
@@ -167,6 +205,7 @@ def create_event():
             print e
             log(e)
             return jsonify(error="Something went wrong!"),500
+
 
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
