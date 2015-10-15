@@ -41,7 +41,7 @@ def password_change_request(user,rid):
         mongo.db.password_change_requests.create_index("time",expireAfterSeconds=24*60)
         message="Your password reset request was received, your request Id is "+ rid +".\n Change your password by visiting this URL.\n" + "http://localhost/forgotpassword"
         if sendmail(user,message,"Forgot Password Request"):
-            res=mongo.db.password_change_requests.update({"user" : user}, {"$set" : {"rid":rid,"time":datetime.utcnow()}},upsert=True)
+            res=mongo.db.password_change_requests.update({"user" : user}, {"$set" : {"rid":rid,"time":datetime.datetime.utcnow()}},upsert=True)
             return True
         else:
             return False
@@ -52,7 +52,7 @@ def password_change_request(user,rid):
 
 
 def check_status(authtoken):
-    res= mongo.db.session.find_and_modify({'authkey': authtoken},{"$set":{"loggedat":datetime.datetime.utcnow()}})
+    res= mongo.db.session.find_and_modify({'authtoken': authtoken},{"$set":{"loggedat":datetime.datetime.utcnow()}})
     if res is not None:
         return True
     else:
@@ -61,8 +61,8 @@ def check_status(authtoken):
 def send_verification_email(user):
     try:
         verification_code=''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        message= "Verify your account by entering this verification code " + verification_code + "/n This code will expire after 24 hrs"
-        mongo.db.password_change_requests.create_index("time",expireAfterSeconds=24*60)
+        message= "Verify your account by entering this verification code " + verification_code + "\n This code will expire after 24 hrs"
+        mongo.db.verification_code.create_index("time",expireAfterSeconds=24*60)
         if sendmail(user,message,"Successfully Registered on Poolclues"):
             res=mongo.db.verification_code.update({"user" : user}, {"$set" : {"verification_code":verification_code,"time":datetime.datetime.utcnow()}},upsert=True)
             return True
@@ -75,7 +75,7 @@ def send_verification_email(user):
 
 
 def current_user(authtoken):
-    curruser=mongo.db.session.find_one({'authkey': authtoken})
+    curruser=mongo.db.session.find_one({'authtoken': authtoken})
     if curruser is not None:
         return curruser['user']
     else:

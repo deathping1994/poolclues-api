@@ -201,7 +201,7 @@ def invite(eventid):
     try:
         data=request.get_json(force=True)
         event= Event.query.get(eventid)
-        if currentuser(data['authtoken'])!=event['email_id']:
+        if current_user(data['authtoken'])!=event.email_id:
             return jsonify(error="You are not authorised to send invites for this event."),403
         else:
             inviteSent=True
@@ -221,7 +221,7 @@ def invite(eventid):
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             print e
-            return jsonify(error="Something went wrong probably even does not exist or you are not a valid user"),500
+            return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
         else:
             print e
             log(e)
@@ -233,36 +233,39 @@ def invite(eventid):
 @login_required
 def create_event():
     try:
-        # import pdb
-        # pdb.set_trace()
-        db.create_all()
         data=request.get_json(force=True)
-        if len(data['event_name'])!=0:
-            target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
-            event=Event(data['email_id'],data['event_name'],target_date
-                        ,data['target_amount'],data['description'])
-            db.session.add(event)
-            db.session.commit()
-            event_id=event.event_id
-            inviteSent=True
-            failedlist=[]
-            if "invites" in data:
-                print "found invites"
-                for invite in data['invites']:
-                    print invite['email_id']
-                    inviteentry=Invitee(invite['email_id'],event.event_id)
-                    if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
-                        inviteSent=False
-                        failedlist.append(invite['email_id'])
-                        print "inside  invite"
-                        print inviteentry.email_id
-                    else:
-                        db.session.add(inviteentry)
-                        db.session.commit()
-            return jsonify(success="Event created successfully.",event_id=event_id,
-                           failedlist=failedlist,inviteSent=inviteSent),201
+        if current_user(data['authtoken'])!=data['email_id']:
+            return jsonify(error="You are not authorised to create events for this user"),403
         else:
-            return jsonify(error="Event name field empty"),500
+            # import pdb
+            # pdb.set_trace()
+            db.create_all()
+            if len(data['event_name'])!=0:
+                target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
+                event=Event(data['email_id'],data['event_name'],target_date
+                            ,data['target_amount'],data['description'])
+                db.session.add(event)
+                db.session.commit()
+                event_id=event.event_id
+                inviteSent=True
+                failedlist=[]
+                if "invites" in data:
+                    print "found invites"
+                    for invite in data['invites']:
+                        print invite['email_id']
+                        inviteentry=Invitee(invite['email_id'],event.event_id)
+                        if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
+                            inviteSent=False
+                            failedlist.append(invite['email_id'])
+                            print "inside  invite"
+                            print inviteentry.email_id
+                        else:
+                            db.session.add(inviteentry)
+                            db.session.commit()
+                return jsonify(success="Event created successfully.",event_id=event_id,
+                               failedlist=failedlist,inviteSent=inviteSent),201
+            else:
+                return jsonify(error="Event name field empty"),500
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             db.session.rollback()
