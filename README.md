@@ -152,15 +152,16 @@ example: http://188.166.249.229:8080/event/115
 example: http://188.166.249.229:8080/event/115
 
 ### Payload:
-       {
-        "authtoken":<user's suth token>
-        "email_id":"deathping1994@gmail.com",
+      {"email_id":"94@gmail.com",
         "event_name": "Gaurav's b'day",
-        "target_date": "11/12/2015",
+        "target_date": "11122015",
         "target_amount":"5000",
-        "description":"Too lazy for that"
-       }
+        "description":"Too lazy for that",
+        "invites": [{"email_id":"deathping1994@gmail.com"}
+ 			],
+        "msg": "new custom message"
 
+      }
 ### Response:
        {
            "event_id": 115,

@@ -1,40 +1,47 @@
 from app import bcrypt, app
 from flask.ext.cors import cross_origin
-from flask import request,jsonify
+from flask import request
 from models import *
 from utilities import *
 import sqlalchemy.exc
-import requests
 
 
-def sendmail(to,fromemail,message):
+@app.route("/<user>/verify",methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def verify_account(user):
     try:
-        data={'to':to,'fromemail':fromemail,'message':message}
-        print requests.post("http://188.166.249.229/mailer.php",data=data).content
-        return True
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==user:
+            res=mongo.db.verification_code.find_one({"user":user})
+            if res['verification_code']==data['verification_code']:
+                record=User.query.get(user)
+                record.verified=True
+                db.session.commit()
+                return jsonify(success="Email Successfully verified"),200
+            else:
+                return jsonify(error="Either you entered wrong verification code or your verification code has expired"),500
+        else:
+            return jsonify(error="user does not exist"),500
     except Exception as e:
-        print "inside exception"
         print e
         log(e)
-        return False
+        return jsonify(error="Something went wrong"),500
 
-
-def sendinvite(to,fromemail,eventname,msg):
-    message="Hi, "+fromemail+" has invited you to pool for "+eventname+ " on poolclues." +"\n"+msg
-    print message
-    if not sendmail(to,fromemail,message):
-        return False
-    else:
-        return True
 
 @app.route("/<email_id>/addphone/<phone>",methods=["POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
 def addphone(email_id,phone):
     try:
-        contact=ContactNumber(email_id,phone)
-        db.session.add(contact)
-        db.session.commit()
-        return jsonify(success="Contact added Successfully!"),201
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==email_id:
+            contact=ContactNumber(email_id,phone)
+            db.session.add(contact)
+            db.session.commit()
+            return jsonify(success="Contact added Successfully!"),201
+        else:
+            return jsonify(error="You are not authorised to modify this account"),403
     except Exception as e:
         log(e)
         return jsonify(error="Something went wrong.Could not add Phone number."),500
@@ -44,7 +51,7 @@ def addphone(email_id,phone):
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def index():
     # import pdb; pdb.set_trace();
-    print "inside index"
+    # print "inside index"
     data=request.get_json(force=True)
     print(data)
     db.create_all()
@@ -57,6 +64,7 @@ def index():
         db.session.commit()
         if "phone" in data:
             addphone(data['email_id'],data['phone'])
+        send_verification_email(user.email_id)
         return jsonify(success="User successfully registered"),200
     except Exception as e:
         print type(e)
@@ -133,26 +141,31 @@ def display_event(event_id):
 
 @app.route('/<email_id>/event/list',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
 def user_event(email_id):
     try:
-        events= Event.query.filter_by(email_id=email_id).all()
-        eventlist=[]
-        res={}
-        if events is not None:
-            for event in events:
-                print event.event_id
-                res['event_id']=event.event_id
-                res['event_name']=event.event_name
-                res['target_date']=str(event.target_date)
-                res['date_created']=str(event.date_created)
-                res['target_amount']=event.target_amount
-                res['event_description']=event.description
-                res['public']=event.public
-                eventlist.append(res.copy())
-                print eventlist
-            return jsonify(event_list=eventlist),200
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==email_id:
+            events= Event.query.filter_by(email_id=email_id).all()
+            eventlist=[]
+            res={}
+            if events is not None:
+                for event in events:
+                    print event.event_id
+                    res['event_id']=event.event_id
+                    res['event_name']=event.event_name
+                    res['target_date']=str(event.target_date)
+                    res['date_created']=str(event.date_created)
+                    res['target_amount']=event.target_amount
+                    res['event_description']=event.description
+                    res['public']=event.public
+                    eventlist.append(res.copy())
+                    print eventlist
+                return jsonify(event_list=eventlist),200
+            else:
+                return jsonify(error="No events found"),500
         else:
-            return jsonify(error="No events found"),500
+            return jsonify(error="You are not authorised to view this event list."),403
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
             return jsonify(error="Event Does not exist or some other sqlalchemy error"),500
@@ -162,8 +175,62 @@ def user_event(email_id):
             return jsonify(error="Something went wrong!"),500
 
 
+@app.route('/forgotpassword/<user>',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def forgot_password(user):
+    try:
+        userlist=User.query.get(user)
+        if userlist is not None:
+            rid= bcrypt.generate_password_hash(user + str(datetime.datetime.now())+"Forgot secret password")
+            if password_change_request(user,rid):
+                return jsonify(success="Password change request has been recorded check your email for further instructions."),200
+            else:
+                return jsonify(error="Cannot take password change request, Try again"),500
+        else:
+            return jsonify(error="User does not exist"),404
+    except Exception as e:
+        print e
+        log(e)
+        return jsonify(error="Something wen wrong!"),500
+
+
+@app.route('/<eventid>/invite',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def invite(eventid):
+    try:
+        data=request.get_json(force=True)
+        event= Event.query.get(eventid)
+        if currentuser(data['authtoken'])!=event['email_id']:
+            return jsonify(error="You are not authorised to send invites for this event."),403
+        else:
+            inviteSent=True
+            failedlist=[]
+            for invite in data['invites']:
+                inviteentry=Invitee(invite['email_id'],event.event_id)
+                if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
+                    inviteSent=False
+                    failedlist.append(invite['email_id'])
+                else:
+                    db.session.add(inviteentry)
+                    db.session.commit()
+            if not inviteSent:
+                return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
+            else:
+                return jsonify(success="All invitations sent successfully"),201
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Something went wrong probably even does not exist or you are not a valid user"),500
+        else:
+            print e
+            log(e)
+            return jsonify(error="Oops! something broke, we'll fix it soon."),500
+
+
 @app.route('/event/create',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
 def create_event():
     try:
         # import pdb
