@@ -40,6 +40,58 @@ or
      "error": "Oops something went wrong. Contact the adminsitrator"
      }
 
+## Verify Email
+### endpoint: `/:email:/verify`
+so url will be `http://localhost:8080/gshukla66@gmail.com/verify`
+
+### Samle payload:
+      {
+     "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC",
+     "verification_code":"7OL124"
+      }
+### Response:  
+     {
+        "success": ""Email Successfully verified"
+    }
+or
+    {
+    "error": "Some error message"
+    }
+
+
+## Forgot Password
+### endpoint: `/forgotpassword/:user:`
+so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
+
+### Response:  
+    {
+       "success": "Password change request has been recorded check your email for further instructions."
+   }
+or
+   {
+   "error": "Some error message"
+   }
+
+## Verify Email
+### endpoint: `/:email:/verify`
+so url will be `http://localhost:8080/gshukla66@gmail.com/verify`
+
+### Samle payload:
+    {
+   "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC",
+   "verification_code":"7OL124"
+    }
+### Response:  
+   {
+      "success": ""Email Successfully verified"
+  }
+or
+  {
+  "error": "Some error message"
+  }
+
+
+
 ### endpoint: /authenticate
 example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
 
@@ -159,7 +211,9 @@ example: http://188.166.249.229:8080/event/115
         "description":"Too lazy for that",
         "invites": [{"email_id":"deathping1994@gmail.com"}
  			],
-        "msg": "new custom message"
+        "msg": "new custom message",
+        "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+        "public": true
 
       }
 ### Response:
