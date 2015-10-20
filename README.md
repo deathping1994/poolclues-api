@@ -59,6 +59,36 @@ or
     }
 
 
+## Product List
+### endpoint: `/products/list`
+so url will be `http://localhost:8080/products/list`
+
+### Samle payload:
+      {
+     "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC"
+      }
+### Response:  
+     {
+        "products": [
+                    {"name":"product name",
+                    "image":"http://img.com/img1.jpg",
+                    "price":100,
+                    "id":123Hj
+                    },
+                    {"name":"product name",
+                    "image":"http://img.com/img1.jpg",
+                    "price":100,
+                    "id":1123Hj
+                    }
+                    ]
+    }
+or
+    {
+    "error": "Some error message"
+    }
+
+
+
 ## Forgot Password
 ### endpoint: `/forgotpassword/:user:`
 so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
@@ -211,6 +241,8 @@ example: http://188.166.249.229:8080/event/115
         "description":"Too lazy for that",
         "invites": [{"email_id":"deathping1994@gmail.com"}
  			],
+        "products":["id1","id2"],  //Array of pid of products selected as gift (optional in case of cash voucher do not pass this field)
+
         "msg": "new custom message",
         "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
         "public": true
