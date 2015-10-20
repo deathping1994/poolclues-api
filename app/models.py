@@ -77,6 +77,15 @@ class Event(db.Model):
         self.public=public
 
 
+class GiftBucket(db.Model):
+    event_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
+    product_id=db.Column(db.Integer,primary_key=True)
+
+    def __init__(self,event_id,product_id):
+        self.event_id=event_id
+        self.product_id=product_id
+
+
 class Invitee(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
     event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)

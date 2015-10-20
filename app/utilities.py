@@ -30,10 +30,7 @@ def sendmail(to,message,subject):
         print r.json()
         return True
     except Exception as e:
-        print "inside exception"
-        print e
-        log(e)
-        return False
+        raise e
 
 
 def password_change_request(user,rid):

@@ -47,6 +47,26 @@ def addphone(email_id,phone):
         return jsonify(error="Something went wrong.Could not add Phone number."),500
 
 
+@app.route('/products/list',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def list_products():
+    try:
+        product={}
+        products=[]
+        for i in range(1,30):
+            product['id']=i
+            product['name']="dummy"+str(i)
+            product['image']="http://cdn.shopclues.net/images/thumbnails/25029/320/320/201510081245551444388995.jpg"
+            product['price']=100
+            products.append(product.copy())
+        return jsonify(products=products),200
+    except Exception as e:
+        print e
+        log(e)
+        return jsonify(error="Shopclues is down."),500
+
+
+
 @app.route('/register',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def index():
@@ -245,8 +265,17 @@ def create_event():
                 event=Event(data['email_id'],data['event_name'],target_date
                             ,data['target_amount'],data['description'])
                 db.session.add(event)
-                db.session.commit()
-                event_id=event.event_id
+                db.session.flush()
+                if "products" in data:
+                    for pid in data['products']:
+                        print event.event_id
+                        giftbucket=GiftBucket(event.event_id,pid)
+                        db.session.add(giftbucket)
+                    event_id=event.event_id
+                else:
+                    voucher_code=get_voucher_code(data['target_amount'])
+                    giftbucket=GiftBucket(event.event_id,voucher_code)
+                    db.session.add(giftbucket)
                 inviteSent=True
                 failedlist=[]
                 if "invites" in data:
@@ -261,7 +290,8 @@ def create_event():
                             print inviteentry.email_id
                         else:
                             db.session.add(inviteentry)
-                            db.session.commit()
+                            db.session.flush()
+                db.session.commit()
                 return jsonify(success="Event created successfully.",event_id=event_id,
                                failedlist=failedlist,inviteSent=inviteSent),201
             else:
@@ -274,6 +304,7 @@ def create_event():
         else:
             print e
             log(e)
+            db.session.rollback()
             return jsonify(error="Something went wrong!"),500
 
 
