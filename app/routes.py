@@ -266,12 +266,12 @@ def create_event():
                             ,data['target_amount'],data['description'])
                 db.session.add(event)
                 db.session.flush()
+                event_id=event.event_id
                 if "products" in data:
                     for pid in data['products']:
                         print event.event_id
                         giftbucket=GiftBucket(event.event_id,pid)
                         db.session.add(giftbucket)
-                    event_id=event.event_id
                 else:
                     voucher_code=get_voucher_code(data['target_amount'])
                     giftbucket=GiftBucket(event.event_id,voucher_code)

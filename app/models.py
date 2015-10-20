@@ -79,7 +79,7 @@ class Event(db.Model):
 
 class GiftBucket(db.Model):
     event_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
-    product_id=db.Column(db.Integer,primary_key=True)
+    product_id=db.Column(db.String(10),primary_key=True)
 
     def __init__(self,event_id,product_id):
         self.event_id=event_id

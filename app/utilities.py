@@ -6,6 +6,10 @@ from functools import wraps
 import string,random
 
 
+def get_voucher_code(amount):
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6))
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
