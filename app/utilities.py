@@ -1,4 +1,4 @@
-from app import mongo
+from app import mongo,bcrypt,db
 import datetime
 from flask import jsonify,request
 import requests
@@ -113,6 +113,24 @@ def log(e):
     try:
         data={"exception":str(e),
             "time": datetime.datetime.now()}
-        mongo.db.poolclueslog.insert(data)
+        print data
+        print mongo.db.poolclueslog.insert(data)
     except Exception:
         return jsonify(error="This time something seriously went wrong event log server is down"),500
+
+
+def makepayment(wallet,share=None,amount=None):
+    try:
+        if share is not None:
+            print wallet.amount,wallet.email_id
+            print share.amount,share.event_id
+            wallet.amount=wallet.amount-share.amount
+            share.transaction_id=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
+                                                               str(datetime.datetime.now()))
+            print share.transaction_id
+        elif amount is not None:
+            wallet.amount=wallet.amount + amount
+            db.session.add(wallet)
+            db.session.commit()
+    except Exception as e:
+        raise e

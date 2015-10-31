@@ -9,9 +9,8 @@ app = Flask("poolclues")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:gaurav@localhost:5432/poolclues'
 bcrypt=Bcrypt(app)
 mongo = PyMongo(app)
+db=SQLAlchemy(app)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
-db = SQLAlchemy(app)
-
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 __author__ = 'gaurav'

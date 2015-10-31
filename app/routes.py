@@ -3,7 +3,34 @@ from flask.ext.cors import cross_origin
 from flask import request
 from models import *
 from utilities import *
+from sqlalchemy import and_
 import sqlalchemy.exc
+
+
+@app.route("/<user>/change/password",methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def update_password(user):
+    try:
+        user=str(user)
+        data=request.get_json(force=True)
+        res=mongo.db.password_change_requests.find_one({"user":user})
+        if res is not None:
+            if res['request_code']==data['request_code']:
+                record=User.query.get(user)
+                record.password= bcrypt.generate_password_hash(data['new_password']+str(datetime.datetime.utcnow()))
+                db.session.commit()
+                return jsonify(success="Password Changed Successfully!"),200
+            else:
+                return jsonify(error="You entered wrong request code!"),500
+        else:
+            e = user+" did not register a password change request! This event will be reported."
+            log(e)
+            return jsonify(error="User did not register a password change request! This event will be reported."),500
+    except Exception as e:
+        print e
+        log(e)
+        return jsonify(error="Something went wrong"),500
 
 
 @app.route("/<user>/verify",methods=["POST"])
@@ -12,6 +39,7 @@ import sqlalchemy.exc
 def verify_account(user):
     try:
         data=request.get_json(force=True)
+        user=str(user)
         if current_user(data['authtoken'])==user:
             res=mongo.db.verification_code.find_one({"user":user})
             if res['verification_code']==data['verification_code']:
@@ -73,14 +101,17 @@ def index():
     # import pdb; pdb.set_trace();
     # print "inside index"
     data=request.get_json(force=True)
-    print(data)
     db.create_all()
+    print(data)
     user =User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
                bcrypt.generate_password_hash(data['password']),data['house_no'],data['street'],
                data['city'],data['state'],data['country'])
     try:
         db.session.add(user)
         # db.session.add(guest)
+        db.session.flush()
+        wallet=Wallet(user.email_id,0)
+        db.session.add(wallet)
         db.session.commit()
         if "phone" in data:
             addphone(data['email_id'],data['phone'])
@@ -92,6 +123,7 @@ def index():
             return jsonify(error="User already Exists"),500
         else:
             log(e)
+            print e
             return jsonify(error="Oops something went wrong. Contact administrator"),500
 
 
@@ -199,7 +231,8 @@ def user_event(email_id):
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def forgot_password(user):
     try:
-        userlist=User.query.get(user)
+        print(user,type(user))
+        userlist=User.query.get(str(user))
         if userlist is not None:
             rid= bcrypt.generate_password_hash(user + str(datetime.datetime.now())+"Forgot secret password")
             if password_change_request(user,rid):
@@ -211,7 +244,7 @@ def forgot_password(user):
     except Exception as e:
         print e
         log(e)
-        return jsonify(error="Something wen wrong!"),500
+        return jsonify(error="Something went wrong!"),500
 
 
 @app.route('/<eventid>/invite',methods=["POST","GET"])
@@ -227,18 +260,24 @@ def invite(eventid):
             inviteSent=True
             failedlist=[]
             for invite in data['invites']:
-                inviteentry=Invitee(invite['email_id'],event.event_id)
+                if "amount" in invite:
+                    inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
+                else:
+                    amount=event.target_amount/num
+                    inviteentry=Invitee(invite['email_id'],event.event_id,amount)
                 if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
                     inviteSent=False
                     failedlist.append(invite['email_id'])
                 else:
                     db.session.add(inviteentry)
-                    db.session.commit()
+                    db.session.flush()
             if not inviteSent:
                 return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
             else:
+                db.session.commit()
                 return jsonify(success="All invitations sent successfully"),201
     except Exception as e:
+        db.session.rollback()
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             print e
             return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
@@ -253,6 +292,7 @@ def invite(eventid):
 @login_required
 def create_event():
     try:
+        db.create_all()
         data=request.get_json(force=True)
         if current_user(data['authtoken'])!=data['email_id']:
             return jsonify(error="You are not authorised to create events for this user"),403
@@ -279,19 +319,19 @@ def create_event():
                 inviteSent=True
                 failedlist=[]
                 if "invites" in data:
-                    print "found invites"
+                    num = len(data['invites'])
                     for invite in data['invites']:
-                        print invite['email_id']
-                        inviteentry=Invitee(invite['email_id'],event.event_id)
+                        if "amount" in invite:
+                            inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
+                        else:
+                            amount=float(event.target_amount)/num
+                            inviteentry=Invitee(invite['email_id'],event.event_id,amount)
                         if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
                             inviteSent=False
                             failedlist.append(invite['email_id'])
-                            print "inside  invite"
-                            print inviteentry.email_id
                         else:
                             db.session.add(inviteentry)
-                            db.session.flush()
-                db.session.commit()
+                            db.session.commit()
                 return jsonify(success="Event created successfully.",event_id=event_id,
                                failedlist=failedlist,inviteSent=inviteSent),201
             else:
@@ -308,9 +348,46 @@ def create_event():
             return jsonify(error="Something went wrong!"),500
 
 
+
+
+@app.route('/<emailid>/pay/<eventid>',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def pay_share(emailid,eventid):
+    try:
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==emailid:
+            temp_eventid=eventid
+            temp_emailid=emailid
+            share = Invitee.query.get((str(temp_emailid),int(temp_eventid)))
+            wallet = Wallet.query.get(emailid)
+            if share is not None:
+                if share.amount <= wallet.amount:
+                    print "before makepayment"
+                    makepayment(wallet,share)
+                    print share.transaction_id
+                    db.session.flush()
+                    db.session.commit()
+                    return jsonify(success="Your Payment Request has been submitted check status in payment history"),200
+                else:
+                    return jsonify(error="Insufficient Balance"),500
+            else:
+                return jsonify(error="You are not invited in this event"),403
+        else:
+            return jsonify(error="You are not authorised to make payment on other users behalf."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
+
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def test():
+    db.create_all()
     return jsonify(success="It works")
 
 

@@ -1,9 +1,6 @@
 from app import app,db
 import datetime
 from flask.ext.sqlalchemy import SQLAlchemy
-
-
-db = SQLAlchemy(app)
 event_id_sequence= db.Sequence('event_id_seq', start=101,increment=1)
 
 
@@ -89,10 +86,26 @@ class GiftBucket(db.Model):
 class Invitee(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
     event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
+    amount=db.Column(db.Float)
+    transaction_id=db.Column(db.String(100),nullable=False)
 
-    def __init__(self,email,event_id):
+    def __init__(self,email,event_id,amount,transaction_id=''):
         self.email_id=email
         self.event_id=event_id
+        self.amount=amount
+        print transaction_id
+        self.transaction_id=transaction_id
+
+
+class Wallet(db.Model):
+    email_id=db.Column(db.String(80),nullable=False,primary_key=True)
+    amount=db.Column(db.Float)
+
+    def __init__(self,email,amount):
+        self.email_id=email
+        self.amount=amount
+
+
 
 __author__ = 'gaurav'
 
