@@ -104,25 +104,6 @@ so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
                "error": "Some error message"
                }
 
-## Verify Email
-### endpoint: `/:email:/verify`
-so url will be `http://localhost:8080/gshukla66@gmail.com/verify`
-
-### Samle payload:
-                    {
-                   "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC",
-                   "verification_code":"7OL124"
-                    }
-### Response:  
-                   {
-                      "success": ""Email Successfully verified"
-                  }
-                or
-                  {
-                  "error": "Some error message"
-                  }
-
-
 
 ### endpoint: /authenticate
 example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
@@ -176,47 +157,47 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
 
            }
 
- ### endpoint: /:email_id:/event/list
+### endpoint: /:email_id:/event/list
 
  example: http://188.166.249.229:8080/gshukla66@gmail.com/event/list
 
- ### Response:
+### Response:
 
-                   {
-                "event_list": [
-                 {
-                     "date_created": "2015-10-08",
-                     "event_description": "Too lazy for that",
-                     "event_id": 106,
-                     "event_name": "Gaurav's b'day",
-                     "public": true,
-                     "target_amount": 5000,
-                     "target_date": "2015-12-11"
-                 },
-                 {
-                     "date_created": "2015-10-08",
-                     "event_description": "Too lazy for that",
-                     "event_id": 106,
-                     "event_name": "Gaurav's b'day",
-                     "public": true,
-                     "target_amount": 5000,
-                     "target_date": "2015-12-11"
-                 },
-                 {
-                     "date_created": "2015-10-08",
-                     "event_description": "Too lazy for that",
-                     "event_id": 106,
-                     "event_name": "Gaurav's b'day",
-                     "public": true,
-                     "target_amount": 5000,
-                     "target_date": "2015-12-11"
-                 }
-                ]
-                }          or
-                    {
-                    "error":"Some error message"
-                    }
-            
+               {
+            "event_list": [
+             {
+                 "date_created": "2015-10-08",
+                 "event_description": "Too lazy for that",
+                 "event_id": 106,
+                 "event_name": "Gaurav's b'day",
+                 "public": true,
+                 "target_amount": 5000,
+                 "target_date": "2015-12-11"
+             },
+             {
+                 "date_created": "2015-10-08",
+                 "event_description": "Too lazy for that",
+                 "event_id": 106,
+                 "event_name": "Gaurav's b'day",
+                 "public": true,
+                 "target_amount": 5000,
+                 "target_date": "2015-12-11"
+             },
+             {
+                 "date_created": "2015-10-08",
+                 "event_description": "Too lazy for that",
+                 "event_id": 106,
+                 "event_name": "Gaurav's b'day",
+                 "public": true,
+                 "target_amount": 5000,
+                 "target_date": "2015-12-11"
+             }
+            ]
+            }          or
+                {
+                "error":"Some error message"
+                }
+           
             
 ### endpoint: /event/:event_id:
 
@@ -274,6 +255,42 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
 ### Response:
        {
            "success": "Password changed successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+
+
+### endpoint: /:eventid:/invite
+example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
+
+### Payload:
+          {
+            "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
+                ],
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Invites sent successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+
+
+### endpoint: /:emailid:/pay/:eventid:
+example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Payment request submitted check status in the payment history"
        }
        or
        {
