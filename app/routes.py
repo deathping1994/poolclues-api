@@ -381,6 +381,33 @@ def pay_share(emailid,eventid):
             return jsonify(error="Something went wrong"),500
 
 
+@app.route('/<emailid>/wallet/add',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def addtowallet(emailid):
+    try:
+        data=request.get_json(force=True)
+        emailid=str(emailid)
+        if current_user(data['authtoken'])==emailid:
+            wallet = Wallet.query.get(emailid)
+            if wallet is not None:
+                makepayment(wallet,amount=data['amount'])
+                db.session.flush()
+                db.session.commit()
+                return jsonify(success="Your Payment Request has been submitted check status in payment history"),200
+            else:
+                return jsonify(error="You Have not registered for Wallet"),403
+        else:
+            return jsonify(error="You are not authorised to make payment on other users behalf."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
+
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def test():

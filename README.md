@@ -296,3 +296,25 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
        {
        "error":"Some error message"
        }
+
+## Dummy Payment (Add money to wallet)
+
+Each user is given a wallet when he signs up all the payments are processed via this wallet. Initially the balance is zero
+to add money to wallet user needs to be logged in and then submit a request to add money to wallet via this url.
+
+### endpoint: /:emailid:/wallet/add
+example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/add
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+            "amount": 5000
+          }
+### Response:
+       {
+           "success": "Payment request submitted check status in the payment history"
+       }
+       or
+       {
+       "error":"Some error message"
+       }

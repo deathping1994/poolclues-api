@@ -130,7 +130,5 @@ def makepayment(wallet,share=None,amount=None):
             print share.transaction_id
         elif amount is not None:
             wallet.amount=wallet.amount + amount
-            db.session.add(wallet)
-            db.session.commit()
     except Exception as e:
         raise e
