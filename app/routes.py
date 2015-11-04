@@ -384,12 +384,12 @@ def invite(eventid):
 @app.route('/registry/<registry_id>/invite',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def invite(registry_id):
+def registry_invite(registry_id):
     try:
         registry_id=str(registry_id)
         data=request.get_json(force=True)
         registry= Registry.query.get(registry_id)
-        if current_user(data['authtoken'])!=event.email_id:
+        if current_user(data['authtoken'])!=registry.email_id:
             return jsonify(error="You are not authorised to send invites for this Registry."),403
         else:
             inviteSent=True
