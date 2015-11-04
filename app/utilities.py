@@ -4,6 +4,7 @@ from flask import jsonify,request
 import requests
 from functools import wraps
 import string,random
+from models import *
 
 
 def get_voucher_code(amount):
@@ -125,10 +126,17 @@ def makepayment(wallet,share=None,amount=None):
             print wallet.amount,wallet.email_id
             print share.amount,share.event_id
             wallet.amount=wallet.amount-share.amount
-            share.transaction_id=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
+            tid=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
                                                                str(datetime.datetime.now()))
+            share.transaction_id=tid
             print share.transaction_id
+            transaction=Transaction(wallet.email_id,tid,share.amount,pool_id=share.event_id)
+            db.session.add(transaction)
         elif amount is not None:
+            tid=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
+                                                               str(datetime.datetime.now()))
+            transaction=Transaction(wallet.email_id,tid,amount,pool_id='')
             wallet.amount=wallet.amount + amount
+            db.session.add(transaction)
     except Exception as e:
         raise e

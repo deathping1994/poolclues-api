@@ -52,15 +52,19 @@ class ContactNumber(db.Model):
         return '<ContactNumber %r %s>' % self.email_id, self.contact_no
 
 
-# class Creator(db.Model):
-#     email_id=db.Column(db.String(80),db.ForeignKey(User.email_id),primary_key=True)
-#     event_id=db.Column(db.Integer,event_id_sequence,autoincrement=True,primary_key=True)
-#
-#     def __init__(self,email_id):
-#         self.email_id=email_id
-#
-#     def __repr__(self):
-#         return '<Creator %r %r>' % self.email_id,self.event_id
+class Transaction(db.Model):
+    transaction_id=db.Column(db.String(80),primary_key=True)
+    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id),primary_key=True)
+    amount=db.Column(db.Float)
+    date=db.Column(db.Date,nullable=False)
+    pool_id=db.Column(db.String(10))
+
+    def __init__(self,email_id,transaction_id,amount,pool_id=''):
+        self.email_id=email_id
+        self.transaction_id=transaction_id
+        self.amount=amount
+        self.pool_id=pool_id
+        self.date=datetime.datetime.now().date()
 
 
 class Event(db.Model):

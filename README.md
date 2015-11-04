@@ -300,6 +300,43 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
        "error":"Some error message"
        }
 
+# Wallet
+
+## Transaction History
+
+Shows list of all transaction by a particular user. Where pool_id ='' in response then the money was added to wallet.
+if pool_id=event id or registry id 
+
+### endpoint: /:emailid:/wallet/history
+example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/history
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+            "transactions": [
+                {
+                    "amount": 0,
+                    "date": "2015-11-04",
+                    "pool_id": "",
+                    "transaction_id": "$2b$12$C1Ba/kQF3jhBNNdKpzUy6uCPGRTRym0/SCgA.48Cr463G0nxOHMSm"
+                },
+                {
+                    "amount": 400,
+                    "date": "2015-11-04",
+                    "pool_id": "",
+                    "transaction_id": "$2b$12$Q9yqx80LPuDBX3KCL9x0Y.Bn8T/gNplTzD2YnNvcEVYUm.Zlq8aqa"
+                }
+            ]
+        }
+       or
+       {
+       "error":"Some error message"
+       }
+
+
 ## Dummy Payment (Add money to wallet)
 
 Each user is given a wallet when he signs up all the payments are processed via this wallet. Initially the balance is zero

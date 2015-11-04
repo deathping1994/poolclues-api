@@ -460,6 +460,7 @@ def addtowallet(emailid):
     try:
         data=request.get_json(force=True)
         emailid=str(emailid)
+        print emailid,current_user(data['authtoken'])
         if current_user(data['authtoken'])==emailid:
             wallet = Wallet.query.get(emailid)
             if wallet is not None:
@@ -538,6 +539,39 @@ def create_registry():
             log(e)
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/<email_id>/wallet/history',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def transaction_hist(email_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        if current_user(data['authtoken'])==email_id:
+            transactions = Transaction.query.filter_by(email_id=email_id)
+            if transactions is not None:
+                transactionlist=[]
+                res={}
+                for transaction in transactions:
+                    res['transaction_id']=transaction.transaction_id
+                    res['date']=str(transaction.date)
+                    res['pool_id']=transaction.pool_id
+                    res['amount']=transaction.amount
+                    transactionlist.append(res.copy())
+                return jsonify(transactions=transactionlist),200
+            else:
+                return jsonify(error="No transactions for this wallet"),403
+        else:
+            return jsonify(error="You are not authorised to view history for this wallet."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
 
 
 @app.route('/')
