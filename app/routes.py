@@ -243,8 +243,10 @@ def create_event():
             db.create_all()
             if len(data['event_name'])!=0:
                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
-                event=Event(data['email_id'],data['event_name'],target_date
-                            ,data['target_amount'],data[git 'description'])
+                pool=Pool()
+                db.session.add(pool)
+                db.session.flush()
+                event=Event(pool.pool_id,data['email_id'],data['event_name'],target_date,data['target_amount'],data['description'])
                 db.session.add(event)
                 db.session.flush()
                 event_id=event.event_id
@@ -440,64 +442,65 @@ def addtowallet(emailid):
             return jsonify(error="Something went wrong"),500
 
 
-# @app.route('/registry/create',methods=["POST"])
-# @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-# @login_required
-# def create_registry():
-#     try:
-#         db.create_all()
-#         data=request.get_json(force=True)
-#         if current_user(data['authtoken'])!=data['email_id']:
-#             return jsonify(error="You are not authorised to create registry for this user"),403
-#         else:
-#             # import pdb
-#             # pdb.set_trace()
-#             db.create_all()
-#             if len(data['event_name'])!=0:
-#                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
-#                 event=Event(data['email_id'],data['event_name'],target_date
-#                             ,data['target_amount'],data['description'])
-#                 db.session.add(event)
-#                 db.session.flush()
-#                 event_id=event.event_id
-#                 if "products" in data:
-#                     for pid in data['products']:
-#                         print event.event_id
-#                         giftbucket=GiftBucket(event.event_id,pid)
-#                         db.session.add(giftbucket)
-#                 inviteSent=True
-#                 failedlist=[]
-#                 if "invites" in data:
-#                     num = len(data['invites'])
-#                     for invite in data['invites']:
-#                         if "amount" in invite:
-#                             inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
-#                         else:
-#                             amount=float(event.target_amount)/num
-#                             inviteentry=Invitee(invite['email_id'],event.event_id,amount)
-#                         if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
-#                             inviteSent=False
-#                             failedlist.append(invite['email_id'])
-#                         else:
-#                             db.session.add(inviteentry)
-#                             db.session.commit()
-#                 else:
-#                     db.session.commit()
-#                 return jsonify(success="Event created successfully.",event_id=event_id,
-#                                failedlist=failedlist,inviteSent=inviteSent),201
-#             else:
-#                 return jsonify(error="Event name field empty"),500
-#     except Exception as e:
-#         if isinstance(e,sqlalchemy.exc.IntegrityError):
-#             db.session.rollback()
-#             print e
-#             return jsonify(error="Event already Exists or User does not exists"),500
-#         else:
-#             print e
-#             log(e)
-#             db.session.rollback()
-#             return jsonify(error="Something went wrong!"),500
-#
+@app.route('/registry/create',methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def create_registry():
+    try:
+        db.create_all()
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])!=data['email_id']:
+            return jsonify(error="You are not authorised to create registry for this user"),403
+        else:
+            # import pdb
+            # pdb.set_trace()
+            db.create_all()
+            if len(data['registry_name'])!=0:
+                target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
+                pool=Pool()
+                db.session.add(pool)
+                db.session.flush()
+                registry=Registry(pool.pool_id,data['email_id'],data['registry_name'],target_date
+                            ,data['description'])
+                db.session.add(registry)
+                db.session.flush()
+                registry_id=registry.registry_id
+                for pid in data['products']:
+                    print registry.registry_id
+                    giftbucket=GiftBucket(registry.registry_id,pid)
+                    db.session.add(giftbucket)
+                inviteSent=True
+                failedlist=[]
+                if "invites" in data:
+                    for invite in data['invites']:
+                        inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
+                        if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
+                            inviteSent=False
+                            failedlist.append(invite['email_id'])
+                        else:
+                            db.session.add(inviteentry)
+                            db.session.commit()
+                else:
+                    db.session.commit()
+                return jsonify(success="Registry created successfully.",registry_id=registry_id,
+                               failedlist=failedlist,inviteSent=inviteSent),201
+            else:
+                return jsonify(error="Registry name field empty"),500
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            db.session.rollback()
+            print e
+            return jsonify(error="Event already Exists or User does not exists"),500
+        elif isinstance(e,KeyError):
+            print e
+            return jsonify(error="Please send all the required fields"),500
+
+        else:
+            print e
+            log(e)
+            db.session.rollback()
+            return jsonify(error="Something went wrong!"),500
+
 
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])

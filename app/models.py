@@ -1,7 +1,16 @@
 from app import app,db
 import datetime
 from flask.ext.sqlalchemy import SQLAlchemy
-event_id_sequence= db.Sequence('event_id_seq', start=101,increment=1)
+pool_id_sequence= db.Sequence('event_id_seq', start=101,increment=1)
+
+
+
+class Pool(db.Model):
+    pool_id=db.Column(db.Integer,pool_id_sequence,autoincrement=True,primary_key=True)
+    public=db.Column(db.Boolean,default=True)
+    def __init__(self,public=True):
+        self.public=True
+
 
 
 class User(db.Model):
@@ -56,7 +65,7 @@ class ContactNumber(db.Model):
 
 class Event(db.Model):
     email_id=db.Column(db.String(80),db.ForeignKey(User.email_id))
-    event_id= db.Column(db.Integer,event_id_sequence,autoincrement=True,primary_key=True)
+    event_id= db.Column(db.Integer,db.ForeignKey(Pool.pool_id),primary_key=True)
     event_name=db.Column(db.String(80),nullable=False)
     target_date=db.Column(db.Date,nullable=False)
     target_amount=db.Column(db.Float,nullable=False)
@@ -64,8 +73,9 @@ class Event(db.Model):
     date_created=db.Column(db.Date,nullable=False)
     public=db.Column(db.Boolean,default=True)
 
-    def __init__(self,email_id,event_name,target_date,target_amount,description,public=True):
+    def __init__(self,event_id,email_id,event_name,target_date,target_amount,description,public=True):
         self.email_id=email_id
+        self.event_id=event_id
         self.event_name=event_name
         self.target_date=target_date
         self.date_created=datetime.datetime.now().date()
@@ -74,8 +84,9 @@ class Event(db.Model):
         self.public=public
 
 
+
 class GiftBucket(db.Model):
-    event_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
+    event_id= db.Column(db.Integer,db.ForeignKey(Pool.pool_id),primary_key=True)
     product_id=db.Column(db.String(10),primary_key=True)
 
     def __init__(self,event_id,product_id):
@@ -85,7 +96,7 @@ class GiftBucket(db.Model):
 
 class Invitee(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
-    event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
+    event_id=db.Column(db.Integer,db.ForeignKey(Pool.pool_id),primary_key=True)
     amount=db.Column(db.Float)
     transaction_id=db.Column(db.String(100),nullable=False)
 
@@ -97,16 +108,23 @@ class Invitee(db.Model):
         self.transaction_id=transaction_id
 
 
-# class Registry(db.Model):
-#     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
-#     registry_id=db.Column(db.Integer,registry_id_sequence,autoincrement=True,primary_key=True,primary_key=True)
-#
-#     def __init__(self,email,event_id,amount,transaction_id=''):
-#         self.email_id=email
-#         self.event_id=event_id
-#         self.amount=amount
-#         print transaction_id
-#         self.transaction_id=transaction_id
+class Registry(db.Model):
+    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id))
+    registry_id= db.Column(db.Integer,db.ForeignKey(Pool.pool_id),primary_key=True)
+    registry_name=db.Column(db.String(80),nullable=False)
+    target_date=db.Column(db.Date,nullable=False)
+    description=db.Column(db.Text,nullable=False)
+    date_created=db.Column(db.Date,nullable=False)
+    public=db.Column(db.Boolean,default=True)
+
+    def __init__(self,registry_id,email_id,registry_name,target_date,description,public=True):
+        self.email_id=email_id
+        self.registry_id=registry_id
+        self.registry_name=registry_name
+        self.target_date=target_date
+        self.date_created=datetime.datetime.now().date()
+        self.description=description
+        self.public=public
 
 
 class Wallet(db.Model):

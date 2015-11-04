@@ -341,3 +341,40 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password/2
        {
        "error":"Some error message"
        }
+
+# Event Registry
+
+Registry is like wish list of user. User creates a registry and selects products which he wants to receive as gifts. 
+Invite is send to all email id from whom user wishes to get a gift.
+User is not bound to make any payment and only this products get delivered for which the payment is complete
+
+## Create Registry
+
+### end point : /registry/create
+example: http://188.166.249.229:8080/registry/create
+
+### Payload:
+          {
+            "email_id":"deathping1994@gmail.com",
+            "registry_name": "Gaurav's b'day",
+            "target_date": "11122015",
+            "description":"Too lazy for that",
+            "invites": [{"email_id":"poolclues@gmail.com","amount":3000
+            }],
+            "products":["id1","id2"], 
+            "msg": "new custom message",
+            "authtoken": "$2b$12$zXJud8qrfsPbMjdyLULT7O13LsrJ.LfO5RwwxrpCvy3cuSyrqXPqS",
+            "public": true   //optional By default Assumed too be true
+
+            }
+### Response:
+           {
+               "failedlist": [],
+                "inviteSent": true,
+                "registry_id": 105,
+                "success": "Registry created successfully."
+            }
+           or
+           {
+           "error":"Some error message"
+           }
