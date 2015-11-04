@@ -266,9 +266,8 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
        }
 
 
-### endpoint: /:eventid:/invite
-example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
-
+### endpoint: /event/:eventid:/invite
+example: http://188.166.249.229:8080/event/104/invite
 ### Payload:
           {
             "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
@@ -378,3 +377,21 @@ example: http://188.166.249.229:8080/registry/create
            {
            "error":"Some error message"
            }
+
+## Invite in Registry
+### endpoint: /registry/:registry_id:/invite
+example: http://188.166.249.229:8080/registry/104/invite
+### Payload:
+          {
+            "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
+                ],
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Invites sent successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }

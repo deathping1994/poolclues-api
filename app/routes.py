@@ -341,7 +341,7 @@ def update_password(user):
         return jsonify(error="Something went wrong"),500
 
 
-@app.route('/<eventid>/invite',methods=["POST","GET"])
+@app.route('/event/<eventid>/invite',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
 def invite(eventid):
@@ -379,6 +379,44 @@ def invite(eventid):
             print e
             log(e)
             return jsonify(error="Oops! something broke, we'll fix it soon."),500
+
+
+@app.route('/registry/<registry_id>/invite',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def invite(registry_id):
+    try:
+        registry_id=str(registry_id)
+        data=request.get_json(force=True)
+        registry= Registry.query.get(registry_id)
+        if current_user(data['authtoken'])!=event.email_id:
+            return jsonify(error="You are not authorised to send invites for this Registry."),403
+        else:
+            inviteSent=True
+            failedlist=[]
+            for invite in data['invites']:
+                inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
+                if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
+                    inviteSent=False
+                    failedlist.append(invite['email_id'])
+                else:
+                    db.session.add(inviteentry)
+                    db.session.flush()
+            if not inviteSent:
+                return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
+            else:
+                db.session.commit()
+                return jsonify(success="All invitations sent successfully"),201
+    except Exception as e:
+        db.session.rollback()
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
+        else:
+            print e
+            log(e)
+            return jsonify(error="Oops! something broke, we'll fix it soon."),500
+
 
 
 @app.route('/<emailid>/pay/<eventid>',methods=["GET","POST"])
