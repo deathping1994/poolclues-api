@@ -403,7 +403,7 @@ def pay_share(emailid,eventid):
                 else:
                     return jsonify(error="Insufficient Balance"),500
             else:
-                return jsonify(error="You are not invited in this event"),403
+                return jsonify(error="You are not invited in this event or you have already paid your share"),403
         else:
             return jsonify(error="You are not authorised to make payment on other users behalf."),403
     except Exception as e:
