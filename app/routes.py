@@ -175,9 +175,18 @@ def user_event(email_id):
     try:
         data=request.get_json(force=True)
         if current_user(data['authtoken'])==email_id:
-            events= Event.query.filter_by(email_id=email_id).all()
+            sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' )"+" or email_id ='"+email_id+"'"
+            events= db.engine.execute(sql)
+            # events_invited=Event.select()Invitee.query.filter_by(email_id=email_id).all()
             eventlist=[]
+            # resinvited={}
             res={}
+            # if events_invited is not None:
+            #     for invited in events_invited:
+            #         resinvited['event_id']=invited.event_id
+            #         resinvited['creator']=False
+            #         eventlist.append(resinvited.copy())
+            #         print eventlist
             if events is not None:
                 for event in events:
                     print event.event_id
@@ -189,7 +198,7 @@ def user_event(email_id):
                     res['event_description']=event.description
                     res['public']=event.public
                     eventlist.append(res.copy())
-                    print eventlist
+                print eventlist
                 return jsonify(event_list=eventlist),200
             else:
                 return jsonify(error="No events found"),500
@@ -197,6 +206,7 @@ def user_event(email_id):
             return jsonify(error="You are not authorised to view this event list."),403
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            print e
             return jsonify(error="Event Does not exist or some other sqlalchemy error"),500
         else:
             log(e)
@@ -265,6 +275,8 @@ def create_event():
                         else:
                             db.session.add(inviteentry)
                             db.session.commit()
+                else:
+                    db.session.commit()
                 return jsonify(success="Event created successfully.",event_id=event_id,
                                failedlist=failedlist,inviteSent=inviteSent),201
             else:
@@ -281,9 +293,31 @@ def create_event():
             return jsonify(error="Something went wrong!"),500
 
 
-@app.route("/<user>/change/password",methods=["POST"])
+@app.route("/<user>/change/password/2",methods=["POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
+def update_password2(user):
+    try:
+        user=str(user)
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==user:
+            record=User.query.get(user)
+            print record._password
+            record._password= bcrypt.generate_password_hash(data['new_password'])
+            print record._password
+            db.session.commit()
+            return jsonify(success="Password Changed Successfully!"),200
+        else:
+            return jsonify(error="You are not authorised for this action"),500
+    except Exception as e:
+        print str(e)
+        log(e)
+        return jsonify(error="Something went wrong"),500
+
+
+
+@app.route("/<user>/change/password",methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def update_password(user):
     try:
         user=str(user)
@@ -292,7 +326,7 @@ def update_password(user):
         if res is not None:
             if res['request_code']==data['request_code']:
                 record=User.query.get(user)
-                record.password= bcrypt.generate_password_hash(data['new_password']+str(datetime.datetime.utcnow()))
+                record._password= bcrypt.generate_password_hash(data['new_password'])
                 db.session.commit()
                 return jsonify(success="Password Changed Successfully!"),200
             else:
@@ -358,7 +392,7 @@ def pay_share(emailid,eventid):
             temp_emailid=emailid
             share = Invitee.query.get((str(temp_emailid),int(temp_eventid)))
             wallet = Wallet.query.get(emailid)
-            if share is not None:
+            if share is not None and share.transaction_id =='':
                 if share.amount <= wallet.amount:
                     print "before makepayment"
                     makepayment(wallet,share)
@@ -407,6 +441,65 @@ def addtowallet(emailid):
             log(e)
             return jsonify(error="Something went wrong"),500
 
+
+# @app.route('/registry/create',methods=["POST"])
+# @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+# @login_required
+# def create_registry():
+#     try:
+#         db.create_all()
+#         data=request.get_json(force=True)
+#         if current_user(data['authtoken'])!=data['email_id']:
+#             return jsonify(error="You are not authorised to create registry for this user"),403
+#         else:
+#             # import pdb
+#             # pdb.set_trace()
+#             db.create_all()
+#             if len(data['event_name'])!=0:
+#                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
+#                 event=Event(data['email_id'],data['event_name'],target_date
+#                             ,data['target_amount'],data['description'])
+#                 db.session.add(event)
+#                 db.session.flush()
+#                 event_id=event.event_id
+#                 if "products" in data:
+#                     for pid in data['products']:
+#                         print event.event_id
+#                         giftbucket=GiftBucket(event.event_id,pid)
+#                         db.session.add(giftbucket)
+#                 inviteSent=True
+#                 failedlist=[]
+#                 if "invites" in data:
+#                     num = len(data['invites'])
+#                     for invite in data['invites']:
+#                         if "amount" in invite:
+#                             inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
+#                         else:
+#                             amount=float(event.target_amount)/num
+#                             inviteentry=Invitee(invite['email_id'],event.event_id,amount)
+#                         if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
+#                             inviteSent=False
+#                             failedlist.append(invite['email_id'])
+#                         else:
+#                             db.session.add(inviteentry)
+#                             db.session.commit()
+#                 else:
+#                     db.session.commit()
+#                 return jsonify(success="Event created successfully.",event_id=event_id,
+#                                failedlist=failedlist,inviteSent=inviteSent),201
+#             else:
+#                 return jsonify(error="Event name field empty"),500
+#     except Exception as e:
+#         if isinstance(e,sqlalchemy.exc.IntegrityError):
+#             db.session.rollback()
+#             print e
+#             return jsonify(error="Event already Exists or User does not exists"),500
+#         else:
+#             print e
+#             log(e)
+#             db.session.rollback()
+#             return jsonify(error="Something went wrong!"),500
+#
 
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])

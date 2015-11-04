@@ -318,3 +318,22 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/add
        {
        "error":"Some error message"
        }
+
+## Change Password without forgot password
+
+### endpoint: /:user:/change/password/2
+example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password/2
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+            "new_password": "new password here"
+          }
+### Response:
+       {
+           "success": "Password updated successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }

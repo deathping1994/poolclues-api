@@ -97,6 +97,18 @@ class Invitee(db.Model):
         self.transaction_id=transaction_id
 
 
+# class Registry(db.Model):
+#     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
+#     registry_id=db.Column(db.Integer,registry_id_sequence,autoincrement=True,primary_key=True,primary_key=True)
+#
+#     def __init__(self,email,event_id,amount,transaction_id=''):
+#         self.email_id=email
+#         self.event_id=event_id
+#         self.amount=amount
+#         print transaction_id
+#         self.transaction_id=transaction_id
+
+
 class Wallet(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
     amount=db.Column(db.Float)
