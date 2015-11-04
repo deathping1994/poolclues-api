@@ -157,9 +157,13 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
 
            }
 
-### endpoint: /:email_id:/event/list
+### endpoint: /:email_id:/event/list/:type:
 
- example: http://188.166.249.229:8080/gshukla66@gmail.com/event/list
+type can be invited, all, created
+invited : List all events the user is invited in
+created : List all events user has created
+all : Include both created and invited
+ example: http://188.166.249.229:8080/gshukla66@gmail.com/event/list/invited
 
 ### Response:
 

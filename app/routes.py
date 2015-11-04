@@ -168,25 +168,24 @@ def addphone(email_id,phone):
         return jsonify(error="Something went wrong.Could not add Phone number."),500
 
 
-@app.route('/<email_id>/event/list',methods=["POST","GET"])
+@app.route('/<email_id>/event/list/<type>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def user_event(email_id):
+def user_event(email_id,type):
     try:
         data=request.get_json(force=True)
+        email_id=str(email_id)
+        type=str(type)
         if current_user(data['authtoken'])==email_id:
-            sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' )"+" or email_id ='"+email_id+"'"
+            if type=="invited":
+                sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' )"
+            elif type=="created":
+                sql="SELECT * FROM event where email_id ='"+email_id+"'"
+            elif type=="all":
+                sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' ) or email_id= '"+email_id+"'"
             events= db.engine.execute(sql)
-            # events_invited=Event.select()Invitee.query.filter_by(email_id=email_id).all()
             eventlist=[]
-            # resinvited={}
             res={}
-            # if events_invited is not None:
-            #     for invited in events_invited:
-            #         resinvited['event_id']=invited.event_id
-            #         resinvited['creator']=False
-            #         eventlist.append(resinvited.copy())
-            #         print eventlist
             if events is not None:
                 for event in events:
                     print event.event_id
@@ -229,7 +228,6 @@ def display_event(event_id):
             print e
             return jsonify(error="Something went wrong!"),500
 
-
 @app.route('/event/create',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -246,7 +244,7 @@ def create_event():
             if len(data['event_name'])!=0:
                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
                 event=Event(data['email_id'],data['event_name'],target_date
-                            ,data['target_amount'],data['description'])
+                            ,data['target_amount'],data[git 'description'])
                 db.session.add(event)
                 db.session.flush()
                 event_id=event.event_id
