@@ -1,0 +1,50 @@
+if share.status == "UNPAID":
+                    contributors=Contributor.query.filter_by(pool_id=temp_pool_id).all()
+                    total_collected=0
+                    total_remaining=contributors.filter_by(status="UNLOCKED").count()
+                    for contributor in contributors:
+                        if contributor.amount !=-1:
+                            total_collected+=contributor.amount
+                    pool=Pool.query.get(pool_id)
+                    current_share=(pool.target_amount-total_collected)/total_remaining
+                    return jsonify(current_share=current_share,info="This share will change until locked."),200
+
+
+@app.route('/<email_id>/<pool_id>/lock/share',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def lock_share(email_id,pool_id):
+    try:
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==email_id:
+            temp_pool_id=pool_id
+            temp_email_id=email_id
+            share = Contributor.query.get((str(temp_email_id),int(temp_pool_id)))
+            if share is not None:
+                if share.status == "PART":
+                    return jsonify(error="You have already locked your share"),500
+                if share.status == "REJECTED":
+                    return jsonify(error="You rejected the invitation to contribute to this pool"),500
+                if share.status == "UNLOCKED":
+                    contributors=Contributor.query.filter_by(pool_id=temp_pool_id).all()
+                    total_collected=0
+                    total_remaining=contributors.filter_by(status="UNLOCKED").count()
+                    for contributor in contributors:
+                        if contributor.amount !=-1:
+                            total_collected+=contributor.amount
+                    pool=Pool.query.get(pool_id)
+                    current_share=(pool.target_amount-total_collected)/total_remaining
+                    share.amount=current_share
+                    return jsonify(success="Your share has been locked"),200
+            else:
+                return jsonify(error="You are not invited in this event or you have already paid your share"),403
+        else:
+            return jsonify(error="You are not authorised to make payment on other users behalf."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+

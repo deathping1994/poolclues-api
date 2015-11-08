@@ -19,6 +19,8 @@ def index():
                bcrypt.generate_password_hash(data['password']),data['house_no'],data['street'],
                data['city'],data['state'],data['country'])
     try:
+        if "user_img" in data:
+            user.user_img=data['user_img']
         db.session.add(user)
         # db.session.add(guest)
         db.session.flush()
@@ -168,70 +170,126 @@ def addphone(email_id,phone):
         return jsonify(error="Something went wrong.Could not add Phone number."),500
 
 
-@app.route('/<email_id>/event/list/<type>',methods=["POST","GET"])
+@app.route('/<email_id>/pool/list/<type>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def user_event(email_id,type):
+def pool_list(email_id,type):
     try:
         data=request.get_json(force=True)
         email_id=str(email_id)
         type=str(type)
         if current_user(data['authtoken'])==email_id:
-            if type=="invited":
-                sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' )"
+            if type=="contributed":
+                sql="SELECT * FROM pool where pool_id IN (SELECT pool_id from contributor where email_id ='"+email_id+"' )"
             elif type=="created":
-                sql="SELECT * FROM event where email_id ='"+email_id+"'"
+                sql="SELECT * FROM pool where email_id ='"+email_id+"'"
             elif type=="all":
-                sql="SELECT * FROM event where event_id IN (SELECT event_id from invitee where email_id ='"+email_id+"' ) or email_id= '"+email_id+"'"
-            events= db.engine.execute(sql)
-            eventlist=[]
+                sql="SELECT * FROM pool where pool_id IN (SELECT pool_id from contributor where email_id ='"+email_id+"' ) or email_id= '"+email_id+"'"
+            pools= db.engine.execute(sql)
+            poollist=[]
             res={}
-            if events is not None:
-                for event in events:
-                    print event.event_id
-                    res['event_id']=event.event_id
-                    res['event_name']=event.event_name
-                    res['target_date']=str(event.target_date)
-                    res['date_created']=str(event.date_created)
-                    res['target_amount']=event.target_amount
-                    res['event_description']=event.description
-                    res['public']=event.public
-                    eventlist.append(res.copy())
-                print eventlist
-                return jsonify(event_list=eventlist),200
+            if pools is not None:
+                for pool in pools:
+                    print pool.pool_id
+                    res['pool_id']=pool.pool_id
+                    res['pool_name']=pool.pool_name
+                    res['target_date']=str(pool.target_date)
+                    res['date_created']=str(pool.date_created)
+                    res['target_amount']=pool.target_amount
+                    res['pool_description']=pool.description
+                    res['searchable']=pool.searchable
+                    poollist.append(res.copy())
+                print poollist
+                return jsonify(pool_list=poollist),200
             else:
-                return jsonify(error="No events found"),500
+                return jsonify(error="No pools found"),500
         else:
-            return jsonify(error="You are not authorised to view this event list."),403
+            return jsonify(error="You are not authorised to view this pool list."),403
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
             print e
-            return jsonify(error="Event Does not exist or some other sqlalchemy error"),500
+            return jsonify(error="Pool Does not exist or some other sqlalchemy error"),500
         else:
             log(e)
             print e
             return jsonify(error="Something went wrong!"),500
 
 
-@app.route('/event/<event_id>',methods=["POST","GET"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-def display_event(event_id):
-    try:
-        event= Event.query.get(event_id)
-        return jsonify(event_id=event.event_id,event_name=event.event_name,target_date=str(event.target_date),
-                       target_amount=event.target_amount,event_description=event.description),200
-    except Exception as e:
-        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
-            return jsonify(error="Event Does not exist or some other sqlalchemy error"),500
-        else:
-            log(e)
-            print e
-            return jsonify(error="Something went wrong!"),500
-
-@app.route('/event/create',methods=["POST","GET"])
+@app.route('/pool/<pool_id>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def create_event():
+def display_pool(pool_id):
+    try:
+        data=request.get_json(force=True)
+        pool= Pool.query.get(int(pool_id))
+        if pool is None:
+            return jsonify(error="Pool does not exist"),500
+        contributors=Contributor.query.filter_by(pool_id=pool.pool_id)
+        auth=contributors.filter_by(email_id=current_user(data['authtoken']))
+        if auth is None:
+            return jsonify(error="You are not a contributor in this pool"),403
+        contributorlist=[]
+        res={}
+        for contributor in contributors:
+            res['email_id']=contributor.email_id
+            res['amount']=contributor.amount
+            res['amount_paid']=contributor.amount_paid
+            res['status']=contributor.status
+            contributorlist.append(res.copy())
+        return jsonify(pool_id=pool.pool_id,pool_name=pool.pool_name,target_date=str(pool.target_date),
+                       target_amount=pool.target_amount,pool_description=pool.description,contributors=contributorlist),200
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            return jsonify(error="some  sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/registry/<registry_id>',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def display_registry(registry_id):
+    try:
+        data=request.get_json(force=True)
+        registry= Registry.query.get(int(registry_id))
+        if pool is None:
+            return jsonify(error="Registry does not exist"),500
+        invitee=Invitee.query.filter_by(registry_id=registry.registry_id)
+        auth=invitee.filter_by(email_id=current_user(data['authtoken']))
+        if registry.searchable!=True:
+            if auth is None:
+                return jsonify(error="This registry is not shared with you"),403
+        inviteelist=[]
+
+        for invite in invitee:
+            inviteelist.append(contributor.email_id)
+        giftbucket=GiftBucket.query.get(registry.registry_id)
+        giftlist=[]
+        res={}
+        for gift in giftbucket:
+            res['pid']= gift.pid
+            res['status']= gift.status
+            if gift.status=="pooling":
+                res['pool_id']= gift.pool_id
+
+        return jsonify(registry_id=registry.registry_id,registry_name=registry.registry_name,
+                       target_date=str(registry.target_date),
+                       registry_description=registry.description,invitees=inviteelist,giftbucket=giftlist),200
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            return jsonify(error="some  sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/pool/create',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def create_pool():
     try:
         db.create_all()
         data=request.get_json(force=True)
@@ -241,51 +299,58 @@ def create_event():
             # import pdb
             # pdb.set_trace()
             db.create_all()
-            if len(data['event_name'])!=0:
+            if len(data['pool_name'])!=0:
                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
-                pool=Pool()
-                db.session.add(pool)
-                db.session.flush()
-                event=Event(pool.pool_id,data['email_id'],data['event_name'],target_date,data['target_amount'],data['description'])
+                event=Event()
                 db.session.add(event)
                 db.session.flush()
-                event_id=event.event_id
+                print event.event_id
+                pool=Pool(event.event_id,data['email_id'],data['pool_name'],target_date,data['target_amount'],data['description'])
+                if "pool_img" in data:
+                    pool.pool_img=data['pool_img']
+                if "searchable" in data:
+                    pool.searchable=data['searchable']
+                db.session.add(pool)
+                db.session.flush()
+                pool_id=pool.pool_id
                 if "products" in data:
                     for pid in data['products']:
-                        print event.event_id
-                        giftbucket=GiftBucket(event.event_id,pid)
-                        db.session.add(giftbucket)
+                        giftbucket=GiftBucket(pool_id,pid)
+                    db.session.add(giftbucket)
                 else:
                     voucher_code=get_voucher_code(data['target_amount'])
-                    giftbucket=GiftBucket(event.event_id,voucher_code)
+                    giftbucket=GiftBucket(pool_id,voucher_code)
                     db.session.add(giftbucket)
                 inviteSent=True
                 failedlist=[]
-                if "invites" in data:
-                    num = len(data['invites'])
-                    for invite in data['invites']:
-                        if "amount" in invite:
-                            inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
+                if "contributors" in data:
+                    num = len(data['contributors'])
+                    if num<=1:
+                        return jsonify(error="Atleast One Contributor other than user required"),500
+                    for contributor in data['contributors']:
+                        if "amount" in contributor:
+                            contributorentry=Contributor(contributor['email_id'],pool_id,contributor['amount'])
                         else:
                             amount=float(event.target_amount)/num
-                            inviteentry=Invitee(invite['email_id'],event.event_id,amount)
-                        if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
+                            contributorentry=Contributor(contributor['email_id'],pool_id,amount)
+                        if not sendinvite(contributor['email_id'],pool.email_id,pool.pool_name,data['msg']):
                             inviteSent=False
-                            failedlist.append(invite['email_id'])
+                            failedlist.append(contributor['email_id'])
                         else:
-                            db.session.add(inviteentry)
+                            db.session.add(contributorentry)
                             db.session.commit()
                 else:
-                    db.session.commit()
-                return jsonify(success="Event created successfully.",event_id=event_id,
+                    db.session.rollback()
+                    return jsonify(error="At least One Contributor other than user required"),500
+                return jsonify(success="Pool created successfully.",pool_id=pool_id,
                                failedlist=failedlist,inviteSent=inviteSent),201
             else:
-                return jsonify(error="Event name field empty"),500
+                return jsonify(error="Pool name field empty"),500
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             db.session.rollback()
             print e
-            return jsonify(error="Event already Exists or User does not exists"),500
+            return jsonify(error="Pool already Exists or User does not exists"),500
         else:
             print e
             log(e)
@@ -315,7 +380,6 @@ def update_password2(user):
         return jsonify(error="Something went wrong"),500
 
 
-
 @app.route("/<user>/change/password",methods=["POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def update_password(user):
@@ -341,40 +405,42 @@ def update_password(user):
         return jsonify(error="Something went wrong"),500
 
 
-@app.route('/event/<eventid>/invite',methods=["POST","GET"])
+@app.route('/pool/<pool_id>/contributor/add',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def invite(eventid):
+def addcontributor(pool_id):
     try:
+        pool_id= str(pool_id)
         data=request.get_json(force=True)
-        event= Event.query.get(eventid)
-        if current_user(data['authtoken'])!=event.email_id:
-            return jsonify(error="You are not authorised to send invites for this event."),403
+        pool= Pool.query.get(pool_id)
+        if current_user(data['authtoken'])!=pool.email_id:
+            return jsonify(error="You are not authorised to add contributors to this pool."),403
         else:
             inviteSent=True
             failedlist=[]
-            for invite in data['invites']:
-                if "amount" in invite:
-                    inviteentry=Invitee(invite['email_id'],event.event_id,invite['amount'])
-                else:
-                    amount=event.target_amount/num
-                    inviteentry=Invitee(invite['email_id'],event.event_id,amount)
-                if not sendinvite(invite['email_id'],event.email_id,event.event_name,data['msg']):
-                    inviteSent=False
-                    failedlist.append(invite['email_id'])
-                else:
-                    db.session.add(inviteentry)
-                    db.session.flush()
+            if "contributors" in data:
+                    num = len(data['contributors'])
+                    for contributor in data['contributors']:
+                        if "amount" in contributor:
+                            contributorentry=Contributor(contributor['email_id'],pool_id,contributor['amount'])
+                        else:
+                            return jsonify(error="Please Provide Amount for each Contributor")
+                        if not sendinvite(contributor['email_id'],pool.email_id,pool.pool_name,data['msg']):
+                            inviteSent=False
+                            failedlist.append(contributor['email_id'])
+                        else:
+                            db.session.add(contributorentry)
+                            db.session.flush()
             if not inviteSent:
                 return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
             else:
                 db.session.commit()
-                return jsonify(success="All invitations sent successfully"),201
+                return jsonify(success="All contributors invited successfully"),201
     except Exception as e:
         db.session.rollback()
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             print e
-            return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
+            return jsonify(error="Something went wrong probably pool does not exist or the user has already been invited"),500
         else:
             print e
             log(e)
@@ -388,14 +454,14 @@ def registry_invite(registry_id):
     try:
         registry_id=str(registry_id)
         data=request.get_json(force=True)
-        registry= Registry.query.get(registry_id)
+        registry= db.session.query(Registry).join(Registry.registry_id).get(Registry.registry_id)
         if current_user(data['authtoken'])!=registry.email_id:
             return jsonify(error="You are not authorised to send invites for this Registry."),403
         else:
             inviteSent=True
             failedlist=[]
             for invite in data['invites']:
-                inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
+                inviteentry=Invitee(invite['email_id'],registry.registry_id)
                 if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
                     inviteSent=False
                     failedlist.append(invite['email_id'])
@@ -419,22 +485,52 @@ def registry_invite(registry_id):
 
 
 
-@app.route('/<emailid>/pay/<eventid>',methods=["GET","POST"])
+@app.route('/<email_id>/<pool_id>/find/share',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
-def pay_share(emailid,eventid):
+def find_share(email_id,pool_id):
     try:
         data=request.get_json(force=True)
-        if current_user(data['authtoken'])==emailid:
-            temp_eventid=eventid
-            temp_emailid=emailid
-            share = Invitee.query.get((str(temp_emailid),int(temp_eventid)))
-            wallet = Wallet.query.get(emailid)
-            if share is not None and share.transaction_id =='':
+        email_id=str(email_id)
+        if current_user(data['authtoken'])==email_id:
+            temp_pool_id=pool_id
+            temp_email_id=email_id
+            share = Contributor.query.get((str(temp_email_id),int(temp_pool_id)))
+            if share is not None:
+                if share.status == "REJECTED":
+                    return jsonify(error="You rejected the invitation to contribute to this pool"),500
+                else:
+                    return jsonify(amount=share.amount,amount_paid=share.amount_paid),200
+            else:
+                return jsonify(error="You are not invited in this event or you have already paid your share"),403
+        else:
+            return jsonify(error="You are not authorised to make payment on other users behalf."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
+
+
+@app.route('/<email_id>/pay/<pool_id>',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def pay_share(email_id,pool_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        if current_user(data['authtoken'])==email_id:
+            temp_pool_id=pool_id
+            temp_email_id=email_id
+            share = Contributor.query.get((str(temp_email_id),int(temp_pool_id)))
+            wallet = Wallet.query.get(email_id)
+            if share is not None:
                 if share.amount <= wallet.amount:
                     print "before makepayment"
                     makepayment(wallet,share)
-                    print share.transaction_id
                     db.session.flush()
                     db.session.commit()
                     return jsonify(success="Your Payment Request has been submitted check status in payment history"),200
@@ -512,7 +608,7 @@ def create_registry():
                 failedlist=[]
                 if "invites" in data:
                     for invite in data['invites']:
-                        inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
+                        inviteentry=Invitee(invite['email_id'],registry.registry_id)
                         if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
                             inviteSent=False
                             failedlist.append(invite['email_id'])
@@ -539,6 +635,87 @@ def create_registry():
             log(e)
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
+
+
+# @app.route('/<email_id>/registry/<registry_id>/delete',methods=["POST"])
+# @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+# @login_required
+# def delete_registry(email_id,registry_id):
+#     try:
+#         email_id=str(email_id)
+#         registry_id=str(registry_id)
+#         data=request.get_json(force=True)
+#         if current_user(data['authtoken'])!=email_id:
+#             return jsonify(error="You are not authorised to create delete this registry"),403
+#         else:
+#             pool=Pool()
+#             db.session.add(pool)
+#             db.session.flush()
+#             registry=Registry(pool.pool_id,data['email_id'],data['registry_name'],target_date
+#                         ,data['description'])
+#             db.session.add(registry)
+#             db.session.flush()
+#             registry_id=registry.registry_id
+#             for pid in data['products']:
+#                 print registry.registry_id
+#                 giftbucket=GiftBucket(registry.registry_id,pid)
+#                 db.session.add(giftbucket)
+#             inviteSent=True
+#             failedlist=[]
+#             if "invites" in data:
+#                 for invite in data['invites']:
+#                     inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
+#                     if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
+#                         inviteSent=False
+#                         failedlist.append(invite['email_id'])
+#                     else:
+#                         db.session.add(inviteentry)
+#                         db.session.commit()
+#             else:
+#                 db.session.commit()
+#             return jsonify(success="Registry created successfully.",registry_id=registry_id,
+#                            failedlist=failedlist,inviteSent=inviteSent),201
+#         else:
+#             return jsonify(error="Registry name field empty"),500
+# except Exception as e:
+#     if isinstance(e,sqlalchemy.exc.IntegrityError):
+#         db.session.rollback()
+#         print e
+#         return jsonify(error="Event already Exists or User does not exists"),500
+#     elif isinstance(e,KeyError):
+#         print e
+#         return jsonify(error="Please send all the required fields"),500
+#
+#     else:
+#         print e
+#         log(e)
+#         db.session.rollback()
+#         return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/<email_id>/wallet',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def wallet_amount(email_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        if current_user(data['authtoken'])==email_id:
+            wallet = Wallet.query.get(email_id)
+            if wallet is not None:
+                return jsonify(amount=wallet.amount),200
+            else:
+                return jsonify(error="You have not registered for a wallet"),403
+        else:
+            return jsonify(error="You are not authorised to view this wallet."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
 
 
 @app.route('/<email_id>/wallet/history',methods=["GET","POST"])

@@ -31,7 +31,7 @@ def sendmail(to,message,subject):
               "token":"$2b$12$8/Z.2WDlk9VVWVND/DVtgej5z.pxKakZYSfkGdLQCIy7VCXgm8VNm"
               }
         print data
-        r= requests.post("http://128.199.169.129:8080/mailer/561e7e12a4fabe0943650ca2",json=data)
+        r= requests.post("http://sendmail.gauravshukla.xyz:8080/mailer/561e7e12a4fabe0943650ca2",json=data)
         print r.json()
         return True
     except Exception as e:
@@ -124,12 +124,11 @@ def makepayment(wallet,share=None,amount=None):
     try:
         if share is not None:
             print wallet.amount,wallet.email_id
-            print share.amount,share.event_id
+            print share.amount,share.pool_id
             wallet.amount=wallet.amount-share.amount
             tid=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
                                                                str(datetime.datetime.now()))
-            share.transaction_id=tid
-            print share.transaction_id
+            share.make_payment(wallet.amount)
             transaction=Transaction(wallet.email_id,tid,share.amount,pool_id=share.event_id)
             db.session.add(transaction)
         elif amount is not None:
