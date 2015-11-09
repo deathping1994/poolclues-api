@@ -1,10 +1,10 @@
 # poolclues-api
 Python Apis for PoolClues
-Test server for front end setup at http://188.166.249.229:8080/
+Test server for front end setup at http://api.poolclues.anip.xyz:8080/
 so use it as url in front end.
 NOTE: This ip address is blocked in college so use proxy to access it in college
 
-To test if you are apble to connect to server send http get request to http://188.166.249.229:8080/ or try to open it in browser
+To test if you are apble to connect to server send http get request to http://api.poolclues.anip.xyz:8080/ or try to open it in browser
 
 response should be
                {
@@ -14,7 +14,7 @@ response should be
 #Api description:
 ## Register User
 ### endpoint: `/register`
-so url will be `http://188.166.249.229:8080/register`
+so url will be `http://api.poolclues.anip.xyz:8080/register`
 
 ### Samle payload:
                {
@@ -28,7 +28,8 @@ so url will be `http://188.166.249.229:8080/register`
                "city":"Lucknow",
                "state":"Uttar Pradesh",
                "country":"India",
-               "phone":"8375847862"     //optional
+               "phone":"8375847862",     //optional
+               "user_img":"imgae url"  //optional
                }
 
 ### Response:  
@@ -106,7 +107,7 @@ so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
 
 
 ### endpoint: /authenticate
-example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
+example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
 
 #### payload:
                    {
@@ -125,7 +126,7 @@ example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
         
 
 ### endpoint: /logout/:email_id:
-example: http://188.166.249.229:8080/logout/gshukla66@gmail.com
+example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
 
 #### payload:
                {"authtoken":<user's suth token>
@@ -142,7 +143,7 @@ NOTE: As of now this endpoint return successfully logged off even when you are n
 
 
 ### endpoint: /:email_id:/addphone/:phonenumber:
-example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/addphone/8375847862
 
 #### payload:
            {"authtoken":<user's suth token>
@@ -156,91 +157,105 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/addphone/8375847862
            "error":"Some error message"
 
            }
+# POOL
 
-### endpoint: /:email_id:/event/list/:type:
+### endpoint: /:email_id:/pool/list/:type:
 
 type can be invited, all, created
-invited : List all events the user is invited in
+contributed : List all pools the user has contributed to
 created : List all events user has created
-all : Include both created and invited
- example: http://188.166.249.229:8080/gshukla66@gmail.com/event/list/invited
+all : Include both created and contributed
+ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/pool/list/invited
 
 ### Response:
 
                {
-            "event_list": [
+            "pool_list": [
              {
                  "date_created": "2015-10-08",
-                 "event_description": "Too lazy for that",
-                 "event_id": 106,
-                 "event_name": "Gaurav's b'day",
+                 "pool_description": "Too lazy for that",
+                 "pool_id": 106,
+                 "pool_name": "Gaurav's b'day",
                  "public": true,
                  "target_amount": 5000,
                  "target_date": "2015-12-11"
              },
              {
                  "date_created": "2015-10-08",
-                 "event_description": "Too lazy for that",
-                 "event_id": 106,
-                 "event_name": "Gaurav's b'day",
-                 "public": true,
-                 "target_amount": 5000,
-                 "target_date": "2015-12-11"
-             },
-             {
-                 "date_created": "2015-10-08",
-                 "event_description": "Too lazy for that",
-                 "event_id": 106,
-                 "event_name": "Gaurav's b'day",
+                 "pool_description": "Too lazy for that",
+                 "pool_id": 106,
+                 "pool_name": "Gaurav's b'day",
                  "public": true,
                  "target_amount": 5000,
                  "target_date": "2015-12-11"
              }
             ]
-            }          or
-                {
-                "error":"Some error message"
-                }
+            }   
+               or
+            {
+            "error":"Some error message"
+            }
            
             
-### endpoint: /event/:event_id:
+### endpoint: /pool/:pool_id:
 
-example: http://188.166.249.229:8080/event/115
+### Usage:
+To give details of a single pool
+example: http://api.poolclues.anip.xyz:8080/pool/115
 
 ### Response:
        {
-           "event_description": "Too lazy for that",
-           "event_id": 115,
-           "event_name": "Gaurav's b'day",
-           "target_amount": 5000,
-           "target_date": "2015-12-11"
-       }
+            "contributors": [
+                {
+                    "amount": 2500,
+                    "amount_paid": null,
+                    "email_id": "deathping19@gmail.com",
+                    "status": "UNPAID"
+                },
+                {
+                    "amount": 2500,
+                    "amount_paid": null,
+                    "email_id": "deathping192@gmail.com",
+                    "status": "UNPAID"
+                }
+            ],
+            "pool_description": "Too lazy for that",
+            "pool_id": 116,
+            "pool_name": "Gaurav's b'day",
+            "target_amount": 5000,
+            "target_date": "2015-12-11"
+        }
        or
        {
        "error":"Some error message"
        }
-### endpoint: /event/create
-example: http://188.166.249.229:8080/event/115
+       
+### endpoint: /pool/create
+example: http://api.poolclues.anip.xyz:8080/pool/create
 
 ### Payload:
           {"email_id":"94@gmail.com",
-            "event_name": "Gaurav's b'day",
+            "pool_name": "Gaurav's b'day",
+            "pool_img": "url for pool image"  //optional
             "target_date": "11122015",
             "target_amount":"5000",
             "description":"Too lazy for that",
-            "invites": [{"email_id":"deathping1994@gmail.com"}
+            "contributors": [{"email_id":"deathping1994@gmail.com","amount":"2000"},// minimum two contributors required
+                            {"email_id":"94@gmail.com","amount":"2000"}         // creator must also be a contributor 
                 ],
             "products":["id1","id2"],  //Array of pid of products selected as gift (optional in case of cash voucher do not pass this field)
     
             "msg": "new custom message",
             "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
-            "public": true
+            "searchable": true
     
           }
 ### Response:
        {
-           "event_id": 115,
-           "success": "event created successfully"
+        "failedlist": [],
+        "inviteSent": true,
+        "pool_id": 116,
+        "success": "Pool created successfully."
        }
        or
        {
@@ -249,7 +264,7 @@ example: http://188.166.249.229:8080/event/115
 
 
 ### endpoint: /:user:/change/password
-example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
 
 ### Payload:
           {
@@ -266,11 +281,11 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
        }
 
 
-### endpoint: /event/:eventid:/invite
-example: http://188.166.249.229:8080/event/104/invite
+### endpoint: /pool/:pool_id:/contributor/add
+example: http://api.poolclues.anip.xyz:8080/event/104/invite
 ### Payload:
           {
-            "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
+            "contributors": [{"email_id":"deathping1994@gmail.com","amount":2000}  // amount here is not optional
                 ],
             "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
           }
@@ -285,7 +300,7 @@ example: http://188.166.249.229:8080/event/104/invite
 
 
 ### endpoint: /:emailid:/pay/:eventid:
-example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
 
 ### Payload:
           {
@@ -308,7 +323,7 @@ Shows list of all transaction by a particular user. Where pool_id ='' in respons
 if pool_id=event id or registry id 
 
 ### endpoint: /:emailid:/wallet/history
-example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/history
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/wallet/history
 
 ### Payload:
           {
@@ -343,7 +358,7 @@ Each user is given a wallet when he signs up all the payments are processed via 
 to add money to wallet user needs to be logged in and then submit a request to add money to wallet via this url.
 
 ### endpoint: /:emailid:/wallet/add
-example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/add
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/wallet/add
 
 ### Payload:
           {
@@ -362,7 +377,7 @@ example: http://188.166.249.229:8080/gshukla66@gmail.com/wallet/add
 ## Change Password without forgot password
 
 ### endpoint: /:user:/change/password/2
-example: http://188.166.249.229:8080/gshukla66@gmail.com/change/password/2
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password/2
 
 ### Payload:
           {
@@ -387,7 +402,7 @@ User is not bound to make any payment and only this products get delivered for w
 ## Create Registry
 
 ### end point : /registry/create
-example: http://188.166.249.229:8080/registry/create
+example: http://api.poolclues.anip.xyz:8080/registry/create
 
 ### Payload:
           {
@@ -417,7 +432,7 @@ example: http://188.166.249.229:8080/registry/create
 
 ## Invite in Registry
 ### endpoint: /registry/:registry_id:/invite
-example: http://188.166.249.229:8080/registry/104/invite
+example: http://api.poolclues.anip.xyz:8080/registry/104/invite
 ### Payload:
           {
             "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}

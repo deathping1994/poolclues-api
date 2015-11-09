@@ -129,7 +129,7 @@ def makepayment(wallet,share=None,amount=None):
             tid=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
                                                                str(datetime.datetime.now()))
             share.make_payment(wallet.amount)
-            transaction=Transaction(wallet.email_id,tid,share.amount,pool_id=share.event_id)
+            transaction=Transaction(wallet.email_id,tid,share.amount,pool_id=share.pool_id)
             db.session.add(transaction)
         elif amount is not None:
             tid=bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +

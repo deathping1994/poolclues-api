@@ -325,13 +325,14 @@ def create_pool():
                 failedlist=[]
                 if "contributors" in data:
                     num = len(data['contributors'])
+                    print num
                     if num<=1:
                         return jsonify(error="Atleast One Contributor other than user required"),500
                     for contributor in data['contributors']:
                         if "amount" in contributor:
                             contributorentry=Contributor(contributor['email_id'],pool_id,contributor['amount'])
                         else:
-                            amount=float(event.target_amount)/num
+                            amount=float(pool.target_amount)/num
                             contributorentry=Contributor(contributor['email_id'],pool_id,amount)
                         if not sendinvite(contributor['email_id'],pool.email_id,pool.pool_name,data['msg']):
                             inviteSent=False
@@ -592,10 +593,10 @@ def create_registry():
             db.create_all()
             if len(data['registry_name'])!=0:
                 target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
-                pool=Pool()
-                db.session.add(pool)
+                event=Event()
+                db.session.add(event)
                 db.session.flush()
-                registry=Registry(pool.pool_id,data['email_id'],data['registry_name'],target_date
+                registry=Registry(event.event_id,data['email_id'],data['registry_name'],target_date
                             ,data['description'])
                 db.session.add(registry)
                 db.session.flush()
@@ -748,7 +749,6 @@ def transaction_hist(email_id):
         else:
             log(e)
             return jsonify(error="Something went wrong"),500
-
 
 
 @app.route('/')
