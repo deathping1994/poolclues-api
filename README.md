@@ -12,7 +12,8 @@ response should be
                }
 
 #Api description:
-## Register User
+# User
+## Register
 ### endpoint: `/register`
 so url will be `http://api.poolclues.anip.xyz:8080/register`
 
@@ -40,6 +41,10 @@ so url will be `http://api.poolclues.anip.xyz:8080/register`
              {
              "error": "Oops something went wrong. Contact the adminsitrator"
              }
+             
+## Delete Registry
+
+## Modify Registry
 
 ## Verify Email
 ### endpoint: `/:email:/verify`
@@ -59,8 +64,74 @@ so url will be `http://localhost:8080/gshukla66@gmail.com/verify`
             {
             "error": "Some error message"
             }
+## Forgot Password (Generate password change request)
+### endpoint: `/forgotpassword/:user:`
+so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
 
+### Response:  
+                {
+                   "success": "Password change request has been recorded check your email for further instructions."
+               }
+            or
+               {
+               "error": "Some error message"
+               }
 
+## Login
+### endpoint: /authenticate
+example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
+
+#### payload:
+                   {
+                   "email_id":<user's email_id>,
+                   "password":<user's password>
+                   }
+### Response:
+               {
+               "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+               "success": "Successfully Logged in !"
+               }
+               or
+               {
+               "error":"Some error message"
+               }
+        
+## Logout
+### endpoint: /logout/:email_id:
+example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
+
+#### payload:
+               {"authtoken":<user's suth token>
+               }
+### Response:
+               {
+               "success":"Successfully logged off"
+               }
+               or
+               {
+               "error":"Some error message"
+               }
+NOTE: As of now this endpoint return successfully logged off even when you are not logged in ,
+this is a bug but wont be fixed keeping in mind that this system would be replaced with three legged auth system using redis,and JWT
+
+## Add Phone Number
+### endpoint: /:email_id:/addphone/:phonenumber:
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/addphone/8375847862
+
+#### payload:
+           {"authtoken":<user's suth token>
+           }
+### Response:
+           {
+           "success":"Contact added Successfully!"
+           }
+           or
+           {
+           "error":"Some error message"
+
+           }
+
+# Products
 ## Product List
 ### endpoint: `/products/list`
 so url will be `http://localhost:8080/products/list`
@@ -90,73 +161,44 @@ so url will be `http://localhost:8080/products/list`
                 "error": "Some error message"
                 }
 
+### endpoint: /:user:/change/password
+TO change password once the forgot password request has been generated
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
 
-
-## Forgot Password
-### endpoint: `/forgotpassword/:user:`
-so url will be `http://localhost:8080/forgotpassword/gshukla66@gmail.com`
-
-### Response:  
-                {
-                   "success": "Password change request has been recorded check your email for further instructions."
-               }
-            or
-               {
-               "error": "Some error message"
-               }
-
-
-### endpoint: /authenticate
-example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
-
-#### payload:
-                   {
-                   "email_id":<user's email_id>,
-                   "password":<user's password>
-                   }
+### Payload:
+          {
+            "request_code":"password change request code sent in email".
+            "new_password":"new password"
+          }
 ### Response:
-               {
-               "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
-               "success": "Successfully Logged in !"
-               }
-               or
-               {
-               "error":"Some error message"
-               }
-        
+       {
+           "success": "Password changed successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
 
-### endpoint: /logout/:email_id:
-example: http://api.poolclues.anip.xyz:8080/logout/gshukla66@gmail.com
+## Change Password without forgot password
 
-#### payload:
-               {"authtoken":<user's suth token>
-               }
+### endpoint: /:user:/change/password/2
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password/2
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+            "new_password": "new password here"
+          }
 ### Response:
-               {
-               "success":"Successfully logged off"
-               }
-               or
-               {
-               "error":"Some error message"
-               }
-NOTE: As of now this endpoint return successfully logged off even when you are not logged in , this is a bug but wont be fixed keeping in mind that this system would be replaced with three legged auth system using redis,and JWT
+       {
+           "success": "Password updated successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
 
 
-### endpoint: /:email_id:/addphone/:phonenumber:
-example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/addphone/8375847862
-
-#### payload:
-           {"authtoken":<user's suth token>
-           }
-### Response:
-           {
-           "success":"Contact added Successfully!"
-           }
-           or
-           {
-           "error":"Some error message"
-
-           }
 # POOL
 
 ### endpoint: /:email_id:/pool/list/:type:
@@ -229,7 +271,7 @@ example: http://api.poolclues.anip.xyz:8080/pool/115
        {
        "error":"Some error message"
        }
-       
+## Create New Pool       
 ### endpoint: /pool/create
 example: http://api.poolclues.anip.xyz:8080/pool/create
 
@@ -262,30 +304,12 @@ example: http://api.poolclues.anip.xyz:8080/pool/create
        "error":"Some error message"
        }
 
-
-### endpoint: /:user:/change/password
-example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
-
-### Payload:
-          {
-            "request_code":"password change request code sent in email".
-            "new_password":"new password"
-          }
-### Response:
-       {
-           "success": "Password changed successfully"
-       }
-       or
-       {
-       "error":"Some error message"
-       }
-
-
+## Add new Contributors
 ### endpoint: /pool/:pool_id:/contributor/add
 example: http://api.poolclues.anip.xyz:8080/event/104/invite
 ### Payload:
           {
-            "contributors": [{"email_id":"deathping1994@gmail.com","amount":2000}  // amount here is not optional
+            "contributors": [{"email_id":"deathping1994@gmail.com","amount":2000}  // amount here is not optional.
                 ],
             "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
           }
@@ -298,9 +322,13 @@ example: http://api.poolclues.anip.xyz:8080/event/104/invite
        "error":"Some error message"
        }
 
+## Delete Pool
 
-### endpoint: /:emailid:/pay/:eventid:
-example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
+## Modify Pool
+
+## Find Share
+### endpoint: /:email_id:/:pool_id:/find/share
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/103/find/share
 
 ### Payload:
           {
@@ -315,7 +343,95 @@ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
        "error":"Some error message"
        }
 
+## Pay your share in pool
+### endpoint: /:email_id:/pay/:pool_id:
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/pay/103
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Payment request submitted check status in the payment history"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+# Registry
+Registry is like wish list of user. User creates a registry and selects products which he wants to receive as gifts. 
+Invite is send to all email id from whom user wishes to get a gift.
+User is not bound to make any payment and only this products get delivered for which the payment is complete
+
+## Create Registry
+
+### end point : /registry/create
+example: http://api.poolclues.anip.xyz:8080/registry/create
+
+### Payload:
+          {
+            "email_id":"deathping1994@gmail.com",
+            "registry_name": "Gaurav's b'day",
+            "target_date": "11122015",
+            "description":"Too lazy for that",
+            "invites": [{"email_id":"poolclues@gmail.com","amount":3000
+            }],
+            "products":["id1","id2"], 
+            "msg": "new custom message",
+            "authtoken": "$2b$12$zXJud8qrfsPbMjdyLULT7O13LsrJ.LfO5RwwxrpCvy3cuSyrqXPqS",
+            "public": true   //optional By default Assumed too be true
+
+            }
+### Response:
+           {
+               "failedlist": [],
+                "inviteSent": true,
+                "registry_id": 105,
+                "success": "Registry created successfully."
+            }
+           or
+           {
+           "error":"Some error message"
+           }
+## Show Details of single registry
+
+## Delete Registry
+
+## Modify Registry
+
+## Invite in Registry
+### endpoint: /registry/:registry_id:/invite
+example: http://api.poolclues.anip.xyz:8080/registry/104/invite
+### Payload:
+          {
+            "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
+                ],
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Invites sent successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+
 # Wallet
+
+## Show wallet amount
+### endpoint: `/:email_id:/wallet`
+### Payload:
+            {
+            "authtoken": "your auth token"
+            }
+### Response:
+            {"amount": amount in wallet
+             }
+             or 
+             {"error": "Some error msg"
+             }
 
 ## Transaction History
 
@@ -374,76 +490,5 @@ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/wallet/add
        "error":"Some error message"
        }
 
-## Change Password without forgot password
 
-### endpoint: /:user:/change/password/2
-example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password/2
 
-### Payload:
-          {
-            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
-            "new_password": "new password here"
-          }
-### Response:
-       {
-           "success": "Password updated successfully"
-       }
-       or
-       {
-       "error":"Some error message"
-       }
-
-# Event Registry
-
-Registry is like wish list of user. User creates a registry and selects products which he wants to receive as gifts. 
-Invite is send to all email id from whom user wishes to get a gift.
-User is not bound to make any payment and only this products get delivered for which the payment is complete
-
-## Create Registry
-
-### end point : /registry/create
-example: http://api.poolclues.anip.xyz:8080/registry/create
-
-### Payload:
-          {
-            "email_id":"deathping1994@gmail.com",
-            "registry_name": "Gaurav's b'day",
-            "target_date": "11122015",
-            "description":"Too lazy for that",
-            "invites": [{"email_id":"poolclues@gmail.com","amount":3000
-            }],
-            "products":["id1","id2"], 
-            "msg": "new custom message",
-            "authtoken": "$2b$12$zXJud8qrfsPbMjdyLULT7O13LsrJ.LfO5RwwxrpCvy3cuSyrqXPqS",
-            "public": true   //optional By default Assumed too be true
-
-            }
-### Response:
-           {
-               "failedlist": [],
-                "inviteSent": true,
-                "registry_id": 105,
-                "success": "Registry created successfully."
-            }
-           or
-           {
-           "error":"Some error message"
-           }
-
-## Invite in Registry
-### endpoint: /registry/:registry_id:/invite
-example: http://api.poolclues.anip.xyz:8080/registry/104/invite
-### Payload:
-          {
-            "invites": [{"email_id":"deathping1994@gmail.com","amount":2000}
-                ],
-            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
-          }
-### Response:
-       {
-           "success": "Invites sent successfully"
-       }
-       or
-       {
-       "error":"Some error message"
-       }

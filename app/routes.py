@@ -64,26 +64,6 @@ def verify_account(user):
         log(e)
         return jsonify(error="Something went wrong"),500
 
-
-@app.route('/products/list',methods=["GET","POST"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-def list_products():
-    try:
-        product={}
-        products=[]
-        for i in range(1,30):
-            product['id']=i
-            product['name']="dummy"+str(i)
-            product['image']="http://cdn.shopclues.net/images/thumbnails/25029/320/320/201510081245551444388995.jpg"
-            product['price']=100
-            products.append(product.copy())
-        return jsonify(products=products),200
-    except Exception as e:
-        print e
-        log(e)
-        return jsonify(error="Shopclues is down."),500
-
-
 @app.route('/forgotpassword/<user>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def forgot_password(user):
@@ -170,6 +150,75 @@ def addphone(email_id,phone):
         return jsonify(error="Something went wrong.Could not add Phone number."),500
 
 
+@app.route("/<user>/change/password/2",methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def update_password2(user):
+    try:
+        user=str(user)
+        data=request.get_json(force=True)
+        if current_user(data['authtoken'])==user:
+            record=User.query.get(user)
+            print record._password
+            record._password= bcrypt.generate_password_hash(data['new_password'])
+            print record._password
+            db.session.commit()
+            return jsonify(success="Password Changed Successfully!"),200
+        else:
+            return jsonify(error="You are not authorised for this action"),500
+    except Exception as e:
+        print str(e)
+        log(e)
+        return jsonify(error="Something went wrong"),500
+
+
+@app.route("/<user>/change/password",methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def update_password(user):
+    try:
+        user=str(user)
+        data=request.get_json(force=True)
+        res=mongo.db.password_change_requests.find_one({"user":user})
+        if res is not None:
+            if res['request_code']==data['request_code']:
+                record=User.query.get(user)
+                record._password= bcrypt.generate_password_hash(data['new_password'])
+                db.session.commit()
+                return jsonify(success="Password Changed Successfully!"),200
+            else:
+                return jsonify(error="You entered wrong request code!"),500
+        else:
+            e = user+" did not register a password change request! This event will be reported."
+            log(e)
+            return jsonify(error="User did not register a password change request! This event will be reported."),500
+    except Exception as e:
+        print e
+        log(e)
+        return jsonify(error="Something went wrong"),500
+
+
+
+@app.route('/products/list',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def list_products():
+    try:
+        product={}
+        products=[]
+        for i in range(1,30):
+            product['id']=i
+            product['name']="dummy"+str(i)
+            product['image']="http://cdn.shopclues.net/images/thumbnails/25029/320/320/201510081245551444388995.jpg"
+            product['price']=100
+            products.append(product.copy())
+        return jsonify(products=products),200
+    except Exception as e:
+        print e
+        log(e)
+        return jsonify(error="Shopclues is down."),500
+
+
+
+
 @app.route('/<email_id>/pool/list/<type>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -238,45 +287,6 @@ def display_pool(pool_id):
             contributorlist.append(res.copy())
         return jsonify(pool_id=pool.pool_id,pool_name=pool.pool_name,target_date=str(pool.target_date),
                        target_amount=pool.target_amount,pool_description=pool.description,contributors=contributorlist),200
-    except Exception as e:
-        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
-            return jsonify(error="some  sqlalchemy error"),500
-        else:
-            log(e)
-            print e
-            return jsonify(error="Something went wrong!"),500
-
-
-@app.route('/registry/<registry_id>',methods=["POST","GET"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-@login_required
-def display_registry(registry_id):
-    try:
-        data=request.get_json(force=True)
-        registry= Registry.query.get(int(registry_id))
-        if pool is None:
-            return jsonify(error="Registry does not exist"),500
-        invitee=Invitee.query.filter_by(registry_id=registry.registry_id)
-        auth=invitee.filter_by(email_id=current_user(data['authtoken']))
-        if registry.searchable!=True:
-            if auth is None:
-                return jsonify(error="This registry is not shared with you"),403
-        inviteelist=[]
-
-        for invite in invitee:
-            inviteelist.append(contributor.email_id)
-        giftbucket=GiftBucket.query.get(registry.registry_id)
-        giftlist=[]
-        res={}
-        for gift in giftbucket:
-            res['pid']= gift.pid
-            res['status']= gift.status
-            if gift.status=="pooling":
-                res['pool_id']= gift.pool_id
-
-        return jsonify(registry_id=registry.registry_id,registry_name=registry.registry_name,
-                       target_date=str(registry.target_date),
-                       registry_description=registry.description,invitees=inviteelist,giftbucket=giftlist),200
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
             return jsonify(error="some  sqlalchemy error"),500
@@ -359,52 +369,6 @@ def create_pool():
             return jsonify(error="Something went wrong!"),500
 
 
-@app.route("/<user>/change/password/2",methods=["POST"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-@login_required
-def update_password2(user):
-    try:
-        user=str(user)
-        data=request.get_json(force=True)
-        if current_user(data['authtoken'])==user:
-            record=User.query.get(user)
-            print record._password
-            record._password= bcrypt.generate_password_hash(data['new_password'])
-            print record._password
-            db.session.commit()
-            return jsonify(success="Password Changed Successfully!"),200
-        else:
-            return jsonify(error="You are not authorised for this action"),500
-    except Exception as e:
-        print str(e)
-        log(e)
-        return jsonify(error="Something went wrong"),500
-
-
-@app.route("/<user>/change/password",methods=["POST"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-def update_password(user):
-    try:
-        user=str(user)
-        data=request.get_json(force=True)
-        res=mongo.db.password_change_requests.find_one({"user":user})
-        if res is not None:
-            if res['request_code']==data['request_code']:
-                record=User.query.get(user)
-                record._password= bcrypt.generate_password_hash(data['new_password'])
-                db.session.commit()
-                return jsonify(success="Password Changed Successfully!"),200
-            else:
-                return jsonify(error="You entered wrong request code!"),500
-        else:
-            e = user+" did not register a password change request! This event will be reported."
-            log(e)
-            return jsonify(error="User did not register a password change request! This event will be reported."),500
-    except Exception as e:
-        print e
-        log(e)
-        return jsonify(error="Something went wrong"),500
-
 
 @app.route('/pool/<pool_id>/contributor/add',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
@@ -448,44 +412,6 @@ def addcontributor(pool_id):
             return jsonify(error="Oops! something broke, we'll fix it soon."),500
 
 
-@app.route('/registry/<registry_id>/invite',methods=["POST","GET"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-@login_required
-def registry_invite(registry_id):
-    try:
-        registry_id=str(registry_id)
-        data=request.get_json(force=True)
-        registry= db.session.query(Registry).join(Registry.registry_id).get(Registry.registry_id)
-        if current_user(data['authtoken'])!=registry.email_id:
-            return jsonify(error="You are not authorised to send invites for this Registry."),403
-        else:
-            inviteSent=True
-            failedlist=[]
-            for invite in data['invites']:
-                inviteentry=Invitee(invite['email_id'],registry.registry_id)
-                if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
-                    inviteSent=False
-                    failedlist.append(invite['email_id'])
-                else:
-                    db.session.add(inviteentry)
-                    db.session.flush()
-            if not inviteSent:
-                return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
-            else:
-                db.session.commit()
-                return jsonify(success="All invitations sent successfully"),201
-    except Exception as e:
-        db.session.rollback()
-        if isinstance(e,sqlalchemy.exc.IntegrityError):
-            print e
-            return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
-        else:
-            print e
-            log(e)
-            return jsonify(error="Oops! something broke, we'll fix it soon."),500
-
-
-
 @app.route('/<email_id>/<pool_id>/find/share',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -515,7 +441,6 @@ def find_share(email_id,pool_id):
             return jsonify(error="Something went wrong"),500
 
 
-
 @app.route('/<email_id>/pay/<pool_id>',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -539,34 +464,6 @@ def pay_share(email_id,pool_id):
                     return jsonify(error="Insufficient Balance"),500
             else:
                 return jsonify(error="You are not invited in this event or you have already paid your share"),403
-        else:
-            return jsonify(error="You are not authorised to make payment on other users behalf."),403
-    except Exception as e:
-        if isinstance(e,sqlalchemy.exc.IntegrityError):
-            print e
-            return jsonify(error="Some problem with sql constraints"),500
-        else:
-            log(e)
-            return jsonify(error="Something went wrong"),500
-
-
-@app.route('/<emailid>/wallet/add',methods=["GET","POST"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-@login_required
-def addtowallet(emailid):
-    try:
-        data=request.get_json(force=True)
-        emailid=str(emailid)
-        print emailid,current_user(data['authtoken'])
-        if current_user(data['authtoken'])==emailid:
-            wallet = Wallet.query.get(emailid)
-            if wallet is not None:
-                makepayment(wallet,amount=data['amount'])
-                db.session.flush()
-                db.session.commit()
-                return jsonify(success="Your Payment Request has been submitted check status in payment history"),200
-            else:
-                return jsonify(error="You Have not registered for Wallet"),403
         else:
             return jsonify(error="You are not authorised to make payment on other users behalf."),403
     except Exception as e:
@@ -636,6 +533,111 @@ def create_registry():
             log(e)
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/registry/<registry_id>',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def display_registry(registry_id):
+    try:
+        data=request.get_json(force=True)
+        registry= Registry.query.get(int(registry_id))
+        if registry is None:
+            return jsonify(error="Registry does not exist"),500
+        invitee=Invitee.query.filter_by(registry_id=registry.registry_id)
+        auth=invitee.filter_by(email_id=current_user(data['authtoken']))
+        if registry.searchable!=True:
+            if auth is None:
+                return jsonify(error="This registry is not shared with you"),403
+        inviteelist=[]
+
+        for invite in invitee:
+            inviteelist.append(invite.email_id)
+        giftbucket=GiftBucket.query.get(registry.registry_id)
+        giftlist=[]
+        res={}
+        for gift in giftbucket:
+            res['pid']= gift.pid
+            res['status']= gift.status
+            if gift.status=="pooling":
+                res['pool_id']= gift.pool_id
+
+        return jsonify(registry_id=registry.registry_id,registry_name=registry.registry_name,
+                       target_date=str(registry.target_date),
+                       registry_description=registry.description,invitees=inviteelist,giftbucket=giftlist),200
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            return jsonify(error="some  sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/registry/<registry_id>/invite',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def registry_invite(registry_id):
+    try:
+        registry_id=str(registry_id)
+        data=request.get_json(force=True)
+        registry= Registry.query.get(int(registry_id))
+        if current_user(data['authtoken'])!=registry.email_id:
+            return jsonify(error="You are not authorised to send invites for this Registry."),403
+        else:
+            inviteSent=True
+            failedlist=[]
+            for invite in data['invites']:
+                inviteentry=Invitee(invite['email_id'],registry.registry_id)
+                if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
+                    inviteSent=False
+                    failedlist.append(invite['email_id'])
+                else:
+                    db.session.add(inviteentry)
+                    db.session.flush()
+            if not inviteSent:
+                return jsonify(error="Could not send out some invitations",failedlist=failedlist),500
+            else:
+                db.session.commit()
+                return jsonify(success="All invitations sent successfully"),201
+    except Exception as e:
+        db.session.rollback()
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Something went wrong probably event does not exist or you the user has already been invited"),500
+        else:
+            print e
+            log(e)
+            return jsonify(error="Oops! something broke, we'll fix it soon."),500
+
+
+@app.route('/<emailid>/wallet/add',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def addtowallet(emailid):
+    try:
+        data=request.get_json(force=True)
+        emailid=str(emailid)
+        print emailid,current_user(data['authtoken'])
+        if current_user(data['authtoken'])==emailid:
+            wallet = Wallet.query.get(emailid)
+            if wallet is not None:
+                makepayment(wallet,amount=data['amount'])
+                db.session.flush()
+                db.session.commit()
+                return jsonify(success="Your Payment Request has been submitted check status in payment history"),200
+            else:
+                return jsonify(error="You Have not registered for Wallet"),403
+        else:
+            return jsonify(error="You are not authorised to make payment on other users behalf."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            print e
+            return jsonify(error="Some problem with sql constraints"),500
+        else:
+            log(e)
+            return jsonify(error="Something went wrong"),500
+
 
 
 # @app.route('/<email_id>/registry/<registry_id>/delete',methods=["POST"])
