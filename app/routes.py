@@ -535,6 +535,85 @@ def create_registry():
             return jsonify(error="Something went wrong!"),500
 
 
+@app.route('/<email_id>/pool/<pool_id>/delete',methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def delete_pool(email_id,pool_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        pool_id=str(pool_id)
+        print email_id,pool_id
+        if current_user(data['authtoken'])!=email_id:
+            return jsonify(error="You are not authorised to delete this pool"),403
+        else:
+            reg=Pool.query.get(pool_id)
+            if reg is not None:
+                db.session.delete(reg)
+                refund()
+                db.session.commit()
+                return jsonify(error="Pool deleted Successfully"),500
+            else:
+                return jsonify(error="Pool Does not exist"),404
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            db.session.rollback()
+            print e
+            return jsonify(error="Something wrong with sql alchemy"),500
+        else:
+            print e
+            log(e)
+            db.session.rollback()
+            return jsonify(error="Something went wrong!"),500
+
+
+@app.route('/<email_id>/pool/<pool_id>/update',methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def update_pool(email_id,pool_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        pool_id=str(pool_id)
+        print email_id,pool_id
+        if current_user(data['authtoken'])!=email_id:
+            return jsonify(error="You are not authorised to modify this pool"),403
+        else:
+            reg=Pool.query.get(pool_id)
+            if reg is not None:
+                if name in data:
+                    reg.name=data['pool_name']
+                if 'target_date' in data:
+                    target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
+                    if target_date>datetime.datetime.utcnow():
+                        reg.target_date=target_date
+                    else:
+                        return jsonify(error="New date can't be in past"),500
+                if 'target_amount' in data:
+                    if data['target_amount']>reg.target_amount:
+                        reg.target_amount=data['target_amount']
+                    else:
+                        return jsonify(error="You can't reduce the target amount"),500
+                if 'description' in data:
+                    reg.description=data['description']
+                if 'searchable' in data:
+                    reg.searchable=data['searchable']
+                db.session.commit()
+                return jsonify(error="Pool Updated Successfully"),500
+            else:
+                return jsonify(error="Pool Does not exist"),404
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            db.session.rollback()
+            print e
+            return jsonify(error="Something wrong with sql alchemy"),500
+        else:
+            print e
+            log(e)
+            db.session.rollback()
+            return jsonify(error="Something went wrong!"),500
+
+
 @app.route('/registry/<registry_id>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -611,6 +690,79 @@ def registry_invite(registry_id):
             return jsonify(error="Oops! something broke, we'll fix it soon."),500
 
 
+@app.route('/<email_id>/registry/<registry_id>/update',methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def update_registry(email_id,registry_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        registry_id=str(registry_id)
+        if current_user(data['authtoken'])!=email_id:
+            return jsonify(error="You are not authorised to modify this registry"),403
+        else:
+            reg=Registry.query.get(registry_id)
+            if reg is not None:
+                if "registry_name" in data:
+                    reg.name=data['registry_name']
+                if 'target_date' in data:
+                    target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
+                    if target_date>datetime.datetime.utcnow():
+                        reg.target_date=target_date
+                    else:
+                        return jsonify(error="New date can't be in past"),500
+                if 'description' in data:
+                    reg.description=data['description']
+                if 'searchable' in data:
+                    reg.searchable=data['searchable']
+                db.session.commit()
+                return jsonify(error="Registry Updated Successfully"),500
+            else:
+                return jsonify(error="Registry Does not exist"),404
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            db.session.rollback()
+            print e
+            return jsonify(error="Something wrong with sql alchemy"),500
+        else:
+            print e
+            log(e)
+            db.session.rollback()
+            return jsonify(error="Something went wrong!"),500
+
+
+
+@app.route('/<email_id>/registry/<registry_id>/delete',methods=["POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def delete_registry(email_id,registry_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        registry_id=str(registry_id)
+        print email_id,registry_id
+        if current_user(data['authtoken'])!=email_id:
+            return jsonify(error="You are not authorised to create delete this registry"),403
+        else:
+            reg=Registry.query.get(registry_id)
+            if reg is not None:
+                db.session.delete(reg)
+                db.session.commit()
+                return jsonify(error="Registry deleted Successfully"),500
+            else:
+                return jsonify(error="Registry Does not exist"),404
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.IntegrityError):
+            db.session.rollback()
+            print e
+            return jsonify(error="Something wrong with sql alchemy"),500
+        else:
+            print e
+            log(e)
+            db.session.rollback()
+            return jsonify(error="Something went wrong!"),500
+
+
 @app.route('/<emailid>/wallet/add',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -640,62 +792,6 @@ def addtowallet(emailid):
 
 
 
-# @app.route('/<email_id>/registry/<registry_id>/delete',methods=["POST"])
-# @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-# @login_required
-# def delete_registry(email_id,registry_id):
-#     try:
-#         email_id=str(email_id)
-#         registry_id=str(registry_id)
-#         data=request.get_json(force=True)
-#         if current_user(data['authtoken'])!=email_id:
-#             return jsonify(error="You are not authorised to create delete this registry"),403
-#         else:
-#             pool=Pool()
-#             db.session.add(pool)
-#             db.session.flush()
-#             registry=Registry(pool.pool_id,data['email_id'],data['registry_name'],target_date
-#                         ,data['description'])
-#             db.session.add(registry)
-#             db.session.flush()
-#             registry_id=registry.registry_id
-#             for pid in data['products']:
-#                 print registry.registry_id
-#                 giftbucket=GiftBucket(registry.registry_id,pid)
-#                 db.session.add(giftbucket)
-#             inviteSent=True
-#             failedlist=[]
-#             if "invites" in data:
-#                 for invite in data['invites']:
-#                     inviteentry=Invitee(invite['email_id'],registry.registry_id,0)
-#                     if not sendinvite(invite['email_id'],registry.email_id,registry.registry_name,data['msg']):
-#                         inviteSent=False
-#                         failedlist.append(invite['email_id'])
-#                     else:
-#                         db.session.add(inviteentry)
-#                         db.session.commit()
-#             else:
-#                 db.session.commit()
-#             return jsonify(success="Registry created successfully.",registry_id=registry_id,
-#                            failedlist=failedlist,inviteSent=inviteSent),201
-#         else:
-#             return jsonify(error="Registry name field empty"),500
-# except Exception as e:
-#     if isinstance(e,sqlalchemy.exc.IntegrityError):
-#         db.session.rollback()
-#         print e
-#         return jsonify(error="Event already Exists or User does not exists"),500
-#     elif isinstance(e,KeyError):
-#         print e
-#         return jsonify(error="Please send all the required fields"),500
-#
-#     else:
-#         print e
-#         log(e)
-#         db.session.rollback()
-#         return jsonify(error="Something went wrong!"),500
-
-
 @app.route('/<email_id>/wallet',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 @login_required
@@ -718,7 +814,6 @@ def wallet_amount(email_id):
         else:
             log(e)
             return jsonify(error="Something went wrong"),500
-
 
 
 @app.route('/<email_id>/wallet/history',methods=["GET","POST"])
@@ -753,6 +848,7 @@ def transaction_hist(email_id):
             return jsonify(error="Something went wrong"),500
 
 
+
 @app.route('/')
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def test():
@@ -760,9 +856,12 @@ def test():
     return jsonify(success="It works")
 
 
-
-
 __author__ = 'gaurav'
+
+
+
+
+
 
 
 

@@ -323,9 +323,35 @@ example: http://api.poolclues.anip.xyz:8080/event/104/invite
        }
 
 ## Delete Pool
+### endpoint: /:email_id:/pool/:pool_id:/delete
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/pool/104/delete
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Pool Deleted successfully"
+       }
+
 
 ## Modify Pool
-
+### endpoint: /:email_id:/pool/:pool_id:/update
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/pool/104/update
+###Note: Constraints This api can't be used to upload images, and target amount can't be reduced
+Only send fields that need to be updated
+### Payload:
+          { "pool_name": "Gaurav's b'day",
+            "target_date": "11122015",
+            "target_amount":"5000",
+            "description":"Too lazy for that",
+            "searchable": true
+           "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+           {
+           "success":"Pool updated Successfully"
+           }
 ## Find Share
 ### endpoint: /:email_id:/:pool_id:/find/share
 example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/103/find/share
@@ -397,8 +423,35 @@ example: http://api.poolclues.anip.xyz:8080/registry/create
 ## Show Details of single registry
 
 ## Delete Registry
+### endpoint: /:email_id:/registry/:registry_id:/delete
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/registry/104/delete
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Registry Deleted successfully"
+       }
+
 
 ## Modify Registry
+### endpoint: /:email_id:/registry/:registry_id:/update
+example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/registry/104/update
+###Note: Constraints This api can't be used to upload images, and target amount can't be reduced
+Only send fields that need to be updated
+### Payload:
+          { "registry_name": "Gaurav's b'day",
+            "target_date": "11122015",
+            "target_amount":"5000",
+            "description":"Too lazy for that",
+            "searchable": true
+           "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+           {
+           "success":"Pool updated Successfully"
+           }
 
 ## Invite in Registry
 ### endpoint: /registry/:registry_id:/invite

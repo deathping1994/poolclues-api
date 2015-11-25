@@ -139,3 +139,6 @@ def makepayment(wallet,share=None,amount=None):
             db.session.add(transaction)
     except Exception as e:
         raise e
+
+def refund():
+    return True
