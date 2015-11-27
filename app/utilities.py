@@ -140,5 +140,16 @@ def makepayment(wallet,share=None,amount=None):
     except Exception as e:
         raise e
 
+
+def tokenvalid(fbtoken):
+    try:
+        r= requests.gett("https://graph.facebook.com/v2.5/me?access_token="+fbtoken)
+        if error in r.content:
+            return False
+        else:
+            return True
+    except Exception as e:
+        raise e
+
 def refund():
     return True

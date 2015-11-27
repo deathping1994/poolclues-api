@@ -41,11 +41,39 @@ so url will be `http://api.poolclues.anip.xyz:8080/register`
              {
              "error": "Oops something went wrong. Contact the adminsitrator"
              }
-             
-## Delete Registry
 
-## Modify Registry
+## Fblogin
+### endpoint: `/fblogin`
+so url will be `http://api.poolclues.anip.xyz:8080/fblogin`
 
+### Samle payload:
+               {
+                "first_name": "Gaurav",
+               "middle_name":"Ramakant",
+               "last_name": "Shukla",
+               "email_id":"deathping1994@gmail.com",
+               "password":"",  //don't send any password
+               "house_no":"559 ka/48 kha",
+               "street":"Singar Nagar",
+               "city":"Lucknow",
+               "state":"Uttar Pradesh",
+               "country":"India",
+               "phone":"8375847862",     //optional
+               "user_img":"imgae url"  //optional
+               }
+
+### Response:  
+              {
+                 "success": "User successfully logged in",
+                 "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC"
+             }
+        or
+             {
+             "error": "Oops something went wrong. Contact the adminsitrator"
+             }
+ 
+
+ 
 ## Verify Email
 ### endpoint: `/:email:/verify`
 so url will be `http://localhost:8080/gshukla66@gmail.com/verify`

@@ -6,6 +6,47 @@ from utilities import *
 from sqlalchemy import and_
 import sqlalchemy.exc
 
+# @app.route('/fblogintest/<fbtoken>',methods=["GET","POST"])
+# @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+# def testloo(fbtoken):
+#     r= requests.get("https://graph.facebook.com/v2.5/me?access_token="+fbtoken)
+#     if "error" in r.content:
+#         return False
+#     else:
+#         return True
+
+@app.route('/fblogin',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def fblogin():
+    data=request.get_json(force=True)
+    user =User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
+               bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
+                                                               str(datetime.datetime.now())),data['house_no'],data['street'],
+               data['city'],data['state'],data['country'])
+    try:
+        if not tokenvalid(data['fbtoken']):
+            return jsonify(error="Facebook login failed.Try Again"),403
+        if "user_img" in data:
+            user.user_img=data['user_img']
+        res=User.query.get(data['email_id'])
+        authtoken=bcrypt.generate_password_hash(user.email_id+str(datetime.datetime.now()))
+        if res is None:
+            db.session.add(user)
+            # db.session.add(guest)
+            db.session.flush()
+            wallet=Wallet(user.email_id,0)
+            db.session.add(wallet)
+            db.session.commit()
+            if "phone" in data:
+                addphone(data['email_id'],data['phone'])
+        if start_session(user.email_id,authtoken):
+            return jsonify(success="Successfully Logged in !",authtoken=authtoken)
+    except Exception as e:
+        log(e)
+        print e
+        return jsonify(error="Oops something went wrong. Contact administrator"),500
+
+
 
 @app.route('/register',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
