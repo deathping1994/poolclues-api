@@ -18,12 +18,12 @@ import sqlalchemy.exc
 @app.route('/fblogin',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def fblogin():
-    data=request.get_json(force=True)
-    user =User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
-               bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
+    try:
+        data=request.get_json(force=True)
+        user =User(data['first_name'],data['middle_name'],data['last_name'], data['email_id'],
+                   bcrypt.generate_password_hash(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +
                                                                str(datetime.datetime.now())),data['house_no'],data['street'],
                data['city'],data['state'],data['country'])
-    try:
         if not tokenvalid(data['fbtoken']):
             return jsonify(error="Facebook login failed.Try Again"),403
         if "user_img" in data:
