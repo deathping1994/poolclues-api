@@ -622,8 +622,8 @@ def update_pool(email_id,pool_id):
         else:
             reg=Pool.query.get(pool_id)
             if reg is not None:
-                if name in data:
-                    reg.name=data['pool_name']
+                if "pool_name" in data:
+                    reg.pool_name=data['pool_name']
                 if 'target_date' in data:
                     target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
                     if target_date>datetime.datetime.utcnow():
@@ -631,7 +631,7 @@ def update_pool(email_id,pool_id):
                     else:
                         return jsonify(error="New date can't be in past"),500
                 if 'target_amount' in data:
-                    if data['target_amount']>reg.target_amount:
+                    if data['target_amount'] > reg.target_amount:
                         reg.target_amount=data['target_amount']
                     else:
                         return jsonify(error="You can't reduce the target amount"),500
@@ -771,6 +771,45 @@ def update_registry(email_id,registry_id):
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
 
+
+@app.route('/<email_id>/registry/list',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def registry_list(email_id,type):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        type=str(type)
+        if current_user(data['authtoken']) == email_id:
+            # sql
+            pools= db.engine.execute(sql)
+            poollist=[]
+            res={}
+            if pools is not None:
+                for pool in pools:
+                    print pool.pool_id
+                    res['pool_id']=pool.pool_id
+                    res['pool_name']=pool.pool_name
+                    res['target_date']=str(pool.target_date)
+                    res['date_created']=str(pool.date_created)
+                    res['target_amount']=pool.target_amount
+                    res['pool_description']=pool.description
+                    res['searchable']=pool.searchable
+                    poollist.append(res.copy())
+                print poollist
+                return jsonify(pool_list=poollist),200
+            else:
+                return jsonify(error="No pools found"),500
+        else:
+            return jsonify(error="You are not authorised to view this pool list."),403
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            print e
+            return jsonify(error="Pool Does not exist or some other sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
 
 
 @app.route('/<email_id>/registry/<registry_id>/delete',methods=["POST"])

@@ -38,7 +38,7 @@ class User(db.Model):
 
 
 class Registry(db.Model):
-    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id))
+    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id,ondelete='CASCADE'))
     registry_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
     registry_name=db.Column(db.String(80),nullable=False)
     target_date=db.Column(db.Date,nullable=False)
@@ -57,7 +57,7 @@ class Registry(db.Model):
 
 
 class Pool(db.Model):
-    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id))
+    email_id=db.Column(db.String(80),db.ForeignKey(User.email_id,ondelete='CASCADE'))
     pool_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
     pool_name=db.Column(db.String(80),nullable=False)
     pool_img=db.Column(db.String(100),default="images/pool.png")
@@ -128,7 +128,7 @@ class Transaction(db.Model):
 class GiftBucket(db.Model):
     event_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
     product_id=db.Column(db.String(10),primary_key=True)
-    pool_id=db.Column(db.Integer,db.ForeignKey(Pool.pool_id))
+    pool_id=db.Column(db.Integer,db.ForeignKey(Pool.pool_id,ondelete='CASCADE'))
     status=db.Column(db.String(10))
 
     def __init__(self,event_id,product_id):
@@ -142,7 +142,7 @@ class GiftBucket(db.Model):
 
 class Invitee(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
-    event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
+    event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id,ondelete='CASCADE'),primary_key=True)
 
     def __init__(self,email,event_id):
         self.email_id=email
@@ -151,7 +151,7 @@ class Invitee(db.Model):
 
 class Contributor(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
-    pool_id=db.Column(db.Integer,db.ForeignKey(Pool.pool_id),primary_key=True)
+    pool_id=db.Column(db.Integer,db.ForeignKey(Pool.pool_id,ondelete='CASCADE'),primary_key=True)
     amount=db.Column(db.Float)
     amount_paid=db.Column(db.Float)
     status=db.Column(db.String(10),nullable=False)

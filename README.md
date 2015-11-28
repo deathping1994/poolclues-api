@@ -449,6 +449,17 @@ example: http://api.poolclues.anip.xyz:8080/registry/create
            "error":"Some error message"
            }
 ## Show Details of single registry
+### endpoint: /registry/:registry_id:
+example: http://api.poolclues.anip.xyz:8080/registry/104
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+           "success": "Registry Deleted successfully"
+       }
+
 
 ## Delete Registry
 ### endpoint: /:email_id:/registry/:registry_id:/delete
