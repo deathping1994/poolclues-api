@@ -1,11 +1,12 @@
 from app import bcrypt, app
 from flask.ext.cors import cross_origin
 from flask import request
+from elasticsearch import Elasticsearch
 from models import *
 from utilities import *
 from sqlalchemy import and_
 import sqlalchemy.exc
-
+es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 # @app.route('/fblogintest/<fbtoken>',methods=["GET","POST"])
 # @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 # def testloo(fbtoken):
@@ -373,19 +374,23 @@ def update_password(user):
 
 
 
-@app.route('/products/list',methods=["GET","POST"])
+@app.route('/products/search',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def list_products():
     try:
-        product={}
-        products=[]
-        for i in range(1,30):
-            product['id']=i
-            product['name']="dummy"+str(i)
-            product['image']="http://cdn.shopclues.net/images/thumbnails/25029/320/320/201510081245551444388995.jpg"
-            product['price']=100
-            products.append(product.copy())
-        return jsonify(products=products),200
+        query=request.args.get('query')
+        qbody={
+            "query":{
+                "multi_match": { "query":       query,
+                                  "type":        "cross_fields",
+                                 "fields":      [ "Product Name^2","Brand^1.5","Meta category","Category Path^1.1","Product Label1^1","Product Label2^0.9","Product Label3^0.8","Product Label4^0.6" ]
+                                }
+                            }
+             }
+
+        re=es.search(index="projects",body=qbody)
+        re=re['hits']
+        return jsonify(re), 200
     except Exception as e:
         print e
         log(e)

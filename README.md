@@ -161,9 +161,10 @@ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/addphone/8375847
            }
 
 # Products
-## Product List
-### endpoint: `/products/list`
-so url will be `http://localhost:8080/products/list`
+## Product Search
+### endpoint: `/products/search`
+### Both get and Post Allowed
+so url will be `http://localhost:8080/products/search?query="search keyword"`
 
 ### Samle payload:
               {
