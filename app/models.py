@@ -2,6 +2,8 @@ from app import app,db
 import datetime
 from flask.ext.sqlalchemy import SQLAlchemy
 event_id_sequence= db.Sequence('event_id_seq', start=101,increment=1)
+post_id_sequence= db.Sequence('post_id_seq', start=10,increment=1)
+comment_id_sequence= db.Sequence('comment_id_seq', start=20,increment=1)
 
 
 class Event(db.Model):
@@ -171,6 +173,30 @@ class Contributor(db.Model):
 
     def reject(self):
         self.status="Rejected"
+
+
+class Post(db.Model):
+    post_id=db.Column(db.Integer,post_id_sequence,autoincrement=True,primary_key=True)
+    event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id,ondelete='CASCADE'))
+    content=db.Column(db.String(300))
+    author=db.Column(db.String(80))
+
+    def __init__(self,event_id,content,author):
+        self.event_id=event_id
+        self.content=content
+        self.author=author
+
+
+class Comment(db.Model):
+    post_id=db.Column(db.Integer,db.ForeignKey(Post.post_id,ondelete='CASCADE'))
+    comment_id=db.Column(db.Integer,comment_id_sequence,autoincrement=True,primary_key=True)
+    content=db.Column(db.String(200))
+    author=db.Column(db.String(80))
+
+    def __init__(self,post_id,content,author):
+        self.post_id=post_id
+        self.content=content
+        self.author=author
 
 
 class Wallet(db.Model):

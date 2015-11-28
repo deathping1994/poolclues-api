@@ -48,6 +48,7 @@ so url will be `http://api.poolclues.anip.xyz:8080/fblogin`
 
 ### Samle payload:
                {
+               "fbtoken":"send fb token here",
                 "first_name": "Gaurav",
                "middle_name":"Ramakant",
                "last_name": "Shukla",
@@ -625,5 +626,104 @@ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/wallet/add
        "error":"Some error message"
        }
 
+##List all POSTS on POOL AND REGISTRY timeline
+### endpoint: /:event_id:/post/list
+example: http://api.poolclues.anip.xyz:8080/104/post/list
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+            "posts": [
+                {
+                    "author": "deathping1994@gmail.com",
+                    "comments": [],
+                    "content": "hi how are you ganesh ?",
+                    "post_id": 10
+                },
+                {
+                    "author": "deathping1994@gmail.com",
+                    "comments": [
+                        {
+                            "author": "deathping1994@gmail.com",
+                            "comment_id": 20,
+                            "content": "hi how are you ganesh ?"
+                        }
+                    ],
+                    "content": "hi how are you ganesh ?",
+                    "post_id": 11
+                }
+            ]
+        }
+       or
+       {
+       "error":"Some error message"
+       }
+
+##List single POST
+### endpoint: /:event_id:/post/:post_id:
+example: http://api.poolclues.anip.xyz:8080/104/post/21
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+### Response:
+       {
+            "author": "deathping1994@gmail.com",
+            "comments": [
+                {
+                    "author": "deathping1994@gmail.com",
+                    "comment_id": 20,
+                    "content": "hi how are you ganesh ?"
+                }
+            ],
+            "content": "hi how are you ganesh ?",
+            "post_id": 11
+        }
+       or
+       {
+       "error":"Some error message"
+       }
 
 
+
+
+##POSTS on POOL AND REGISTRY timeline
+### endpoint: /:event_id:/post
+example: http://api.poolclues.anip.xyz:8080/104/post
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+            "content": "post content goes here"
+          }
+### Response:
+       {
+           "success": "Posted Successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }
+
+
+##Comments on Posts
+### endpoint: /:event_id:/:post_id/comment
+example: http://api.poolclues.anip.xyz:8080/104/21/comment
+
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq",
+            "content": "comment content goes here"
+          }
+### Response:
+       {
+           "success": "Comment Posted Successfully"
+       }
+       or
+       {
+       "error":"Some error message"
+       }

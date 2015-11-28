@@ -15,6 +15,140 @@ import sqlalchemy.exc
 #     else:
 #         return True
 
+
+@app.route('/<event_id>/post/list',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def list_post(event_id):
+    try:
+        data=request.get_json(force=True)
+        event_id=str(event_id)
+        curruser=current_user(data['authtoken'])
+        event=Event.query.get(int(event_id))
+        if event is None:
+            return jsonify(error="No such pool or registry"),500
+        sql="SELECT count(*) FROM contributor,invitee WHERE (contributor.pool_id="\
+            +event_id+" OR invitee.registry_id="+event_id +") AND (contributor.email_id='"+curruser+"' OR invitee.email_id='"+curruser+"')"
+        queryres=db.engine.execute(sql)
+        if queryres is None:
+            return jsonify(error="You are not authorised view this list"),403
+        elif sql:
+            posts=Post.query.filter_by(event_id=int(event_id))
+            postlist=[]
+            pp={}
+            for post in posts:
+                pp['post_id']=post.post_id
+                pp['content']=post.content
+                pp['author']=post.author
+                commentlist=[]
+                cc={}
+                comments=Comment.query.filter_by(post_id=int(post.post_id))
+                for comment in comments:
+                    cc['comment_id']=comment.comment_id
+                    cc['content']=comment.content
+                    cc['author']=comment.author
+                    commentlist.append(cc.copy())
+                pp['comments']=commentlist
+                postlist.append(pp.copy())
+            return jsonify(posts=postlist),200
+    except Exception as e:
+        log(e)
+        print e
+        return jsonify(error=str(e)),500
+
+
+@app.route('/<event_id>/post/<post_id>',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def display_post(event_id,post_id):
+    try:
+        data=request.get_json(force=True)
+        event_id=str(event_id)
+        post_id=str(post_id)
+        curruser=current_user(data['authtoken'])
+        event=Event.query.get(int(event_id))
+        if event is None:
+            return jsonify(error="No such pool or registry"),500
+        sql="SELECT count(*) FROM contributor,invitee WHERE (contributor.pool_id="\
+            +event_id+" OR invitee.registry_id="+event_id +") AND (contributor.email_id='"+curruser+"' OR invitee.email_id='"+curruser+"')"
+        queryres=db.engine.execute(sql)
+        if queryres is None:
+            return jsonify(error="You are not authorised view this post"),403
+        elif sql:
+            pp={}
+            post=Post.query.get(int(post_id))
+            if post is None:
+                return jsonify(error="Post has been Deleted"),404
+            pp['post_id']=post.post_id
+            pp['content']=post.content
+            pp['author']=post.author
+            commentlist=[]
+            cc={}
+            comments=Comment.query.filter_by(post_id=int(post_id))
+            for comment in comments:
+                cc['comment_id']=comment.comment_id
+                cc['content']=comment.content
+                cc['author']=comment.author
+                commentlist.append(cc.copy())
+            pp['comments']=commentlist
+        return jsonify(pp),200
+    except Exception as e:
+        log(e)
+        print e
+        return jsonify(error=str(e)),500
+
+
+@app.route('/<event_id>/post',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def post(event_id):
+    try:
+        data=request.get_json(force=True)
+        event_id=str(event_id)
+        curruser=current_user(data['authtoken'])
+        event=Event.query.get(int(event_id))
+        if event is None:
+            return jsonify(error="No such pool or registry"),500
+        sql="SELECT count(*) FROM contributor,invitee WHERE (contributor.pool_id="\
+            +event_id+" OR invitee.registry_id="+event_id +") AND (contributor.email_id='"+curruser+"' OR invitee.email_id='"+curruser+"')"
+        queryres=db.engine.execute(sql)
+        if queryres is None:
+            return jsonify(error="You are not authorised to post on this event"),403
+        elif sql:
+            post=Post(event_id,data['content'],curruser)
+            db.session.add(post)
+            db.session.commit()
+            return jsonify(success="Posted successfully",post_id=post.post_id),201
+    except Exception as e:
+        log(e)
+        print e
+        return jsonify(error=str(e)),500
+
+
+@app.route('/<event_id>/<post_id>/comment',methods=["GET","POST"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+def comment(event_id,post_id):
+    try:
+        data=request.get_json(force=True)
+        curruser=current_user(data['authtoken'])
+        post_id=str(post_id)
+        event_id=str(event_id)
+        event=Event.query.get(int(event_id))
+        if event is None:
+            return jsonify(error="No such pool or registry"),404
+        sql="SELECT count(*) FROM contributor,invitee WHERE (contributor.pool_id="\
+            +str(event_id)+" OR invitee.registry_id="+str(event_id) +") AND (contributor.email_id='"+curruser+"' OR invitee.email_id='"+curruser+"')"
+        queryres=db.engine.execute(sql)
+        if queryres is None:
+            return jsonify(error="You are not authorised to comment or post on this event"),403
+        elif sql:
+            comment=Comment(post_id,data['content'],curruser)
+            db.session.add(comment)
+            db.session.commit()
+            return jsonify(success="Comment Posted successfully"),201
+    except Exception as e:
+        log(e)
+        print e
+        return jsonify(error=str(e)),500
+
+
 @app.route('/fblogin',methods=["GET","POST"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def fblogin():
