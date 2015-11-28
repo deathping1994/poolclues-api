@@ -378,7 +378,9 @@ def update_password(user):
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
 def list_products():
     try:
-        query=request.args.get('query')
+        query=request.args.get('query',"")
+        page=request.args.get('from',"0")
+        size=request.args.get('size','10')
         qbody={
             "query":{
                 "multi_match": { "query":       query,
@@ -387,8 +389,8 @@ def list_products():
                                 }
                             }
              }
-
-        re=es.search(index="projects",body=qbody)
+        params={"from":int(page)}
+        re=es.search(index="products",body=qbody,size=size,params=params)
         re=re['hits']
         return jsonify(re), 200
     except Exception as e:

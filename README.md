@@ -165,32 +165,59 @@ example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/addphone/8375847
 ### endpoint: `/products/search`
 ### Both get and Post Allowed
 so url will be `http://localhost:8080/products/search?query="search keyword"`
+or http://localhost:8080/products/search?query=beautiful%20watch&from=100
 
+default size is 10
+and default from is 0
+
+where from denotes the result number eg: is total matches is 100 and from is 30 
+then products from 30 onwards are returned
 ### Samle payload:
               {
              "authtoken": "$2b$12$WI1yg7EgIo0MbGblJd7sA.zhaPBSpMuKenvnoWEiiUANR1ywBOEaC"
               }
               
 ### Response:  
+            {
+              "hits": [
                 {
-            "products": [
-                        {"name":"product name",
-                        "image":"http://img.com/img1.jpg",
-                        "price":100,
-                        "id":123Hj
-                        },
-                        {"name":"product name",
-                        "image":"http://img.com/img1.jpg",
-                        "price":100,
-                        "id":1123Hj
-                        }
-                        ]
-                    }
-                or
-                {
-                "error": "Some error message"
+                  "_id": "97805",
+                  "_index": "products",
+                  "_score": 0.8274903,
+                  "_source": {
+                    "Brand": "Suunto",
+                    "COD": "Yes",
+                    "Category Id": "1559",
+                    "Category Path": "Jewelry & Watches///Watches///Unisex",
+                    "Customer_type": "R",
+                    "Deal": "No",
+                    "Discount (percentage)": "15%",
+                    "EMI": "Yes",
+                    "FreeBee Inside": "No",
+                    "Gender": "U",
+                    "Leaf Category": "Unisex",
+                    "Leaf CategoryId": "1559",
+                    "MRP": "22950.00",
+                    "Meta category": "Jewelry  Watches",
+                    "Price": "19508.00",
+                    "Product ID": "97805",
+                    "Product Label1": "NotAvailable",
+                    "Product Label2": "NotAvailable",
+                    "Product Label3": "NotAvailable",
+                    "Product Label4": "NotAvailable\n",
+                    "Product Name": "Suunto Quest Orange Watch SS018154000",
+                    "Product URL": "http://www.shopclues.com/suunto-quest-orange-watch-ss018154000.html",
+                    "Shipping Cost": "0.00",
+                    "Stock": "Yes",
+                    "Warranty": "NotAvailable",
+                    "image_path": "http://cdn.shopclues.net/images/detailed/85/SUUNTO_QUEST_ORANGE.jpg"
+                  },
+                  "_type": "product"
                 }
-
+              ],
+              "max_score": 1.3740486,
+              "total": 202
+            }
 ### endpoint: /:user:/change/password
 TO change password once the forgot password request has been generated
 example: http://api.poolclues.anip.xyz:8080/gshukla66@gmail.com/change/password
