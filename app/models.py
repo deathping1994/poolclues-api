@@ -142,11 +142,11 @@ class GiftBucket(db.Model):
 
 class Invitee(db.Model):
     email_id=db.Column(db.String(80),nullable=False,primary_key=True)
-    event_id=db.Column(db.Integer,db.ForeignKey(Event.event_id,ondelete='CASCADE'),primary_key=True)
+    registry_id=db.Column(db.Integer,db.ForeignKey(Event.event_id,ondelete='CASCADE'),primary_key=True)
 
-    def __init__(self,email,event_id):
+    def __init__(self,email,registry_id):
         self.email_id=email
-        self.event_id=event_id
+        self.registry_id=registry_id
 
 
 class Contributor(db.Model):

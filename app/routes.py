@@ -174,7 +174,7 @@ def logout(email_id):
 
 
 @app.route("/<email_id>/addphone/<phone>",methods=["POST"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@cross_origin(origin='*', headers=["Content- Type", "Authorization"])
 @login_required
 def addphone(email_id,phone):
     try:
@@ -311,11 +311,15 @@ def pool_list(email_id,type):
 def display_pool(pool_id):
     try:
         data=request.get_json(force=True)
+        curruser=current_user(data['authtoken'])
+        flag=False
         pool= Pool.query.get(int(pool_id))
         if pool is None:
             return jsonify(error="Pool does not exist"),500
+        if pool.email_id==curruser:
+            flag=True
         contributors=Contributor.query.filter_by(pool_id=pool.pool_id)
-        auth=contributors.filter_by(email_id=current_user(data['authtoken']))
+        auth=contributors.filter_by(email_id=curruser)
         if auth is None:
             return jsonify(error="You are not a contributor in this pool"),403
         contributorlist=[]
@@ -326,7 +330,7 @@ def display_pool(pool_id):
             res['amount_paid']=contributor.amount_paid
             res['status']=contributor.status
             contributorlist.append(res.copy())
-        return jsonify(pool_id=pool.pool_id,pool_name=pool.pool_name,target_date=str(pool.target_date),
+        return jsonify(is_creator=flag,pool_id=pool.pool_id,pool_name=pool.pool_name,target_date=str(pool.target_date),
                        target_amount=pool.target_amount,pool_description=pool.description,contributors=contributorlist),200
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
@@ -593,7 +597,7 @@ def delete_pool(email_id,pool_id):
                 db.session.delete(reg)
                 refund()
                 db.session.commit()
-                return jsonify(error="Pool deleted Successfully"),500
+                return jsonify(error="Pool deleted Successfully"),204
             else:
                 return jsonify(error="Pool Does not exist"),404
     except Exception as e:
@@ -640,7 +644,7 @@ def update_pool(email_id,pool_id):
                 if 'searchable' in data:
                     reg.searchable=data['searchable']
                 db.session.commit()
-                return jsonify(error="Pool Updated Successfully"),500
+                return jsonify(error="Pool Updated Successfully"),204
             else:
                 return jsonify(error="Pool Does not exist"),404
     except Exception as e:
@@ -654,6 +658,47 @@ def update_pool(email_id,pool_id):
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
 
+@app.route('/<email_id>/registry/list',methods=["POST","GET"])
+@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
+@login_required
+def registry_list(email_id):
+    try:
+        data=request.get_json(force=True)
+        email_id=str(email_id)
+        curruser=current_user(data['authtoken'])
+        print curruser
+        auth=Invitee.query.filter_by(email_id=curruser)
+        if auth is None:
+            return jsonify(error="No Registry"),404
+        else:
+            sql="SELECT * FROM registry where registry_id IN (SELECT registry_id from invitee where email_id ='"+curruser+"' ) "
+        print str(sql)
+        pools= db.engine.execute(sql)
+        poollist=[]
+        res={}
+        if pools is not None:
+            for pool in pools:
+                print pool.registry_id
+                res['pool_id']=pool.registry_id
+                res['pool_name']=pool.registry_name
+                res['target_date']=str(pool.target_date)
+                res['date_created']=str(pool.date_created)
+                res['pool_description']=pool.description
+                res['searchable']=pool.searchable
+                poollist.append(res.copy())
+            print poollist
+            return jsonify(registry_list=poollist),200
+        else:
+            return jsonify(error="No pools found"),500
+    except Exception as e:
+        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            print e
+            return jsonify(error="Pool Does not exist or some other sqlalchemy error"),500
+        else:
+            log(e)
+            print e
+            return jsonify(error="Something went wrong!"),500
+
 
 @app.route('/registry/<registry_id>',methods=["POST","GET"])
 @cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
@@ -661,11 +706,15 @@ def update_pool(email_id,pool_id):
 def display_registry(registry_id):
     try:
         data=request.get_json(force=True)
+        curruser=current_user(data['authtoken'])
+        flag=False
         registry= Registry.query.get(int(registry_id))
         if registry is None:
             return jsonify(error="Registry does not exist"),500
+        if registry.email_id==curruser:
+            flag=True
         invitee=Invitee.query.filter_by(registry_id=registry.registry_id)
-        auth=invitee.filter_by(email_id=current_user(data['authtoken']))
+        auth=invitee.filter_by(email_id=curruser)
         if registry.searchable!=True:
             if auth is None:
                 return jsonify(error="This registry is not shared with you"),403
@@ -673,20 +722,22 @@ def display_registry(registry_id):
 
         for invite in invitee:
             inviteelist.append(invite.email_id)
-        giftbucket=GiftBucket.query.get(registry.registry_id)
+        giftbucket=GiftBucket.query.filter_by(event_id=registry.registry_id,)
         giftlist=[]
         res={}
         for gift in giftbucket:
-            res['pid']= gift.pid
+            res['pid']= gift.product_id
             res['status']= gift.status
             if gift.status=="pooling":
                 res['pool_id']= gift.pool_id
+            giftlist.append(res.copy())
 
-        return jsonify(registry_id=registry.registry_id,registry_name=registry.registry_name,
+        return jsonify(is_creator=flag,registry_id=registry.registry_id,registry_name=registry.registry_name,
                        target_date=str(registry.target_date),
                        registry_description=registry.description,invitees=inviteelist,giftbucket=giftlist),200
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
+            print str(e)
             return jsonify(error="some  sqlalchemy error"),500
         else:
             log(e)
@@ -757,7 +808,7 @@ def update_registry(email_id,registry_id):
                 if 'searchable' in data:
                     reg.searchable=data['searchable']
                 db.session.commit()
-                return jsonify(error="Registry Updated Successfully"),500
+                return jsonify(error="Registry Updated Successfully"),204
             else:
                 return jsonify(error="Registry Does not exist"),404
     except Exception as e:
@@ -769,46 +820,6 @@ def update_registry(email_id,registry_id):
             print e
             log(e)
             db.session.rollback()
-            return jsonify(error="Something went wrong!"),500
-
-
-@app.route('/<email_id>/registry/list',methods=["POST","GET"])
-@cross_origin(origin='*', headers=['Content- Type', 'Authorization'])
-@login_required
-def registry_list(email_id,type):
-    try:
-        data=request.get_json(force=True)
-        email_id=str(email_id)
-        type=str(type)
-        if current_user(data['authtoken']) == email_id:
-            # sql
-            pools= db.engine.execute(sql)
-            poollist=[]
-            res={}
-            if pools is not None:
-                for pool in pools:
-                    print pool.pool_id
-                    res['pool_id']=pool.pool_id
-                    res['pool_name']=pool.pool_name
-                    res['target_date']=str(pool.target_date)
-                    res['date_created']=str(pool.date_created)
-                    res['target_amount']=pool.target_amount
-                    res['pool_description']=pool.description
-                    res['searchable']=pool.searchable
-                    poollist.append(res.copy())
-                print poollist
-                return jsonify(pool_list=poollist),200
-            else:
-                return jsonify(error="No pools found"),500
-        else:
-            return jsonify(error="You are not authorised to view this pool list."),403
-    except Exception as e:
-        if isinstance(e,sqlalchemy.exc.SQLAlchemyError):
-            print e
-            return jsonify(error="Pool Does not exist or some other sqlalchemy error"),500
-        else:
-            log(e)
-            print e
             return jsonify(error="Something went wrong!"),500
 
 
@@ -828,7 +839,7 @@ def delete_registry(email_id,registry_id):
             if reg is not None:
                 db.session.delete(reg)
                 db.session.commit()
-                return jsonify(error="Registry deleted Successfully"),500
+                return jsonify(error="Registry deleted Successfully"),204
             else:
                 return jsonify(error="Registry Does not exist"),404
     except Exception as e:
@@ -869,7 +880,6 @@ def addtowallet(emailid):
         else:
             log(e)
             return jsonify(error="Something went wrong"),500
-
 
 
 @app.route('/<email_id>/wallet',methods=["GET","POST"])

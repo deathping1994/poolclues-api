@@ -289,6 +289,7 @@ example: http://api.poolclues.anip.xyz:8080/pool/115
                     "status": "UNPAID"
                 }
             ],
+            "is_creator":true,
             "pool_description": "Too lazy for that",
             "pool_id": 116,
             "pool_name": "Gaurav's b'day",
@@ -448,6 +449,32 @@ example: http://api.poolclues.anip.xyz:8080/registry/create
            {
            "error":"Some error message"
            }
+
+## Show Details of single registry
+### endpoint: :email_id:/registry/list
+example: http://api.poolclues.anip.xyz:8080/deathping1994@gmail.com/registry/list
+### Payload:
+          {
+            "authtoken": "$2a$12$wdss4GzgeKb/JW/HUpINjO0pZ462LF65U2dBnlHAGmF7TIndhdRgq"
+          }
+
+### Response:
+        {
+        "registry_list": [
+            {
+                "date_created": "2015-11-28",
+                "pool_description": "Too lazy for that",
+                "pool_id": 102,
+                "pool_name": "Gaurav's b'day",
+                "searchable": true,
+                "target_date": "2015-12-11"
+            }
+        ]
+        }
+        or
+        {
+        "error":"Some Error Message"
+        }
 ## Show Details of single registry
 ### endpoint: /registry/:registry_id:
 example: http://api.poolclues.anip.xyz:8080/registry/104
@@ -457,9 +484,25 @@ example: http://api.poolclues.anip.xyz:8080/registry/104
           }
 ### Response:
        {
-           "success": "Registry Deleted successfully"
+            "giftbucket": [
+                {
+                    "pid": "id1",
+                    "status": null
+                },
+                {
+                    "pid": "id2",
+                    "status": null
+                }
+            ],
+            "invitees": [
+                "poolclues@gmail.com"
+            ],
+            "is_creator": true,
+            "registry_description": "Too lazy for that",
+            "registry_id": 101,
+            "registry_name": "Gaurav's b'day",
+            "target_date": "2015-12-11"
        }
-
 
 ## Delete Registry
 ### endpoint: /:email_id:/registry/:registry_id:/delete
