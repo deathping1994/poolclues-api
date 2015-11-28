@@ -450,7 +450,7 @@ example: http://api.poolclues.anip.xyz:8080/registry/create
            "error":"Some error message"
            }
 
-## Show Details of single registry
+## Show Details of all registry
 ### endpoint: :email_id:/registry/list
 example: http://api.poolclues.anip.xyz:8080/deathping1994@gmail.com/registry/list
 ### Payload:
