@@ -143,8 +143,8 @@ def makepayment(wallet,share=None,amount=None):
 
 def tokenvalid(fbtoken):
     try:
-        r= requests.gett("https://graph.facebook.com/v2.5/me?access_token="+fbtoken)
-        if error in r.content:
+        r= requests.get("https://graph.facebook.com/v2.5/me?access_token="+fbtoken)
+        if "error" in r.content:
             return False
         else:
             return True

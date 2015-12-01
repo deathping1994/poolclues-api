@@ -738,7 +738,7 @@ def delete_pool(email_id,pool_id):
                 db.session.delete(reg)
                 refund()
                 db.session.commit()
-                return jsonify(error="Pool deleted Successfully"),204
+                return jsonify(error="Pool deleted Successfully"),201
             else:
                 return jsonify(error="Pool Does not exist"),404
     except Exception as e:
@@ -785,7 +785,7 @@ def update_pool(email_id,pool_id):
                 if 'searchable' in data:
                     reg.searchable=data['searchable']
                 db.session.commit()
-                return jsonify(error="Pool Updated Successfully"),204
+                return jsonify(error="Pool Updated Successfully"),201
             else:
                 return jsonify(error="Pool Does not exist"),404
     except Exception as e:
@@ -931,13 +931,15 @@ def update_registry(email_id,registry_id):
         data=request.get_json(force=True)
         email_id=str(email_id)
         registry_id=str(registry_id)
+        print data
         if current_user(data['authtoken'])!=email_id:
             return jsonify(error="You are not authorised to modify this registry"),403
         else:
             reg=Registry.query.get(registry_id)
             if reg is not None:
+                print reg
                 if "registry_name" in data:
-                    reg.name=data['registry_name']
+                    reg.registry_name=data['registry_name']
                 if 'target_date' in data:
                     target_date=datetime.datetime.strptime(data['target_date'], "%d%m%Y").date()
                     if target_date>datetime.datetime.utcnow():
@@ -948,17 +950,19 @@ def update_registry(email_id,registry_id):
                     reg.description=data['description']
                 if 'searchable' in data:
                     reg.searchable=data['searchable']
+                print "reached session commit"
                 db.session.commit()
-                return jsonify(error="Registry Updated Successfully"),204
+                print "reached after commit"
+                return jsonify(error="Registry Updated Successfully"),201
             else:
                 return jsonify(error="Registry Does not exist"),404
     except Exception as e:
         if isinstance(e,sqlalchemy.exc.IntegrityError):
             db.session.rollback()
-            print e
+            print str(e)
             return jsonify(error="Something wrong with sql alchemy"),500
         else:
-            print e
+            print str(e)
             log(e)
             db.session.rollback()
             return jsonify(error="Something went wrong!"),500
@@ -980,7 +984,7 @@ def delete_registry(email_id,registry_id):
             if reg is not None:
                 db.session.delete(reg)
                 db.session.commit()
-                return jsonify(error="Registry deleted Successfully"),204
+                return jsonify(error="Registry deleted Successfully"),201
             else:
                 return jsonify(error="Registry Does not exist"),404
     except Exception as e:

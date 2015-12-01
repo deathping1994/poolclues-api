@@ -2,7 +2,7 @@ from elasticsearch import Elasticsearch
 import re
 
 es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
-csvfile=open("/home/gaurav/Desktop/Affiliate_feed.csv","r")
+csvfile=open("/home/gaurav/Affiliate_feed.csv","r")
 fields=csvfile.readline()
 fields=fields.split(",")
 jsonobj={}
