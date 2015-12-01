@@ -12,7 +12,7 @@ class Event(db.Model):
 
 class User(db.Model):
     email_id= db.Column(db.String(80), unique=True,primary_key=True,nullable=False)
-    user_img= db.Column(db.String(80))
+    user_img= db.Column(db.String(280))
     _password= db.Column(db.String(100),nullable=False)
     first_name=db.Column(db.String(20),nullable=False)
     middle_name= db.Column(db.String(20),nullable=True)
@@ -43,6 +43,7 @@ class Registry(db.Model):
     email_id=db.Column(db.String(80),db.ForeignKey(User.email_id,ondelete='CASCADE'))
     registry_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
     registry_name=db.Column(db.String(80),nullable=False)
+    registry_img=db.Column(db.String(280),default="images/pool.png")
     target_date=db.Column(db.Date,nullable=False)
     description=db.Column(db.Text,nullable=False)
     date_created=db.Column(db.Date,nullable=False)
@@ -62,7 +63,7 @@ class Pool(db.Model):
     email_id=db.Column(db.String(80),db.ForeignKey(User.email_id,ondelete='CASCADE'))
     pool_id= db.Column(db.Integer,db.ForeignKey(Event.event_id),primary_key=True)
     pool_name=db.Column(db.String(80),nullable=False)
-    pool_img=db.Column(db.String(100),default="images/pool.png")
+    pool_img=db.Column(db.String(280),default="images/pool.png")
     target_date=db.Column(db.Date,nullable=False)
     target_amount=db.Column(db.Float,nullable=False)
     description=db.Column(db.Text,nullable=False)
