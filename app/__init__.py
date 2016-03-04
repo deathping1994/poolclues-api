@@ -8,7 +8,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask("poolclues")
 admin = Admin(app, name='poolclues', template_mode='bootstrap3')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:gaurav@localhost:5432/poolclues'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://gaurav:shakuntla@localhost:5432/poolclues'
 bcrypt=Bcrypt(app)
 mongo = PyMongo(app)
 db=SQLAlchemy(app)
